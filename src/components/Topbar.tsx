@@ -1,0 +1,56 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from "react";
+import { Mail, Phone, Instagram, Youtube } from "lucide-react";
+
+export default function Topbar() {
+  return (
+    <div className="bg-brand-navy text-white text-[11px] py-2 border-b border-white/5 hidden md:block">
+      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+        {/* Contact Info */}
+        <div className="flex items-center gap-6">
+          <a
+            href="mailto:sdn3purwosari@example.com"
+            className="flex items-center gap-2 hover:text-amber-400 transition"
+          >
+            <Mail size={14} className="text-amber-400" />
+            <span>sdn3purwosari@gmail.com</span>
+          </a>
+          <a
+            href="tel:+6282134567890"
+            className="flex items-center gap-2 hover:text-amber-400 transition"
+          >
+            <Phone size={14} className="text-amber-400" />
+            <span>+62 (0273) 321-456</span>
+          </a>
+        </div>
+
+        {/* Social media and local time */}
+        <div className="flex items-center gap-4">
+          <span className="text-white/50 border-r border-white/20 pr-4">Wonogiri, Jawa Tengah</span>
+          <a
+            href="https://instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-amber-400 transition p-1"
+            title="Instagram"
+          >
+            <Instagram size={14} />
+          </a>
+          <a
+            href="https://youtube.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-amber-400 transition p-1"
+            title="YouTube"
+          >
+            <Youtube size={14} />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
