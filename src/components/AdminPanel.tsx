@@ -26,6 +26,8 @@ import {
   Code
 } from "lucide-react";
 import { Program, Achievement, AgendaEvent, NewsItem } from "../types";
+import { db, isFirebaseConfigured } from "../firebase";
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -78,7 +80,64 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [loginError, setLoginError] = useState("");
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<"admins" | "programs" | "achievements" | "agendas" | "news" | "dev">("admins");
+  const [activeTab, setActiveTab] = useState<"admins" | "programs" | "achievements" | "agendas" | "news" | "registrations" | "dev">("admins");
+
+  // Registration list state
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [isRegsLoading, setIsRegsLoading] = useState(false);
+
+  // Load registrations when the tab changes to "registrations"
+  useEffect(() => {
+    if (activeTab !== "registrations") return;
+    
+    setIsRegsLoading(true);
+    if (isFirebaseConfigured && db) {
+      getDocs(query(collection(db, "registrations"), orderBy("timestamp", "desc")))
+        .then((snapshot) => {
+          const list = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+          setRegistrations(list);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch registrations from Firestore:", err);
+        })
+        .finally(() => {
+          setIsRegsLoading(false);
+        });
+    } else {
+      try {
+        const raw = localStorage.getItem("sdn3_registrations");
+        const list = raw ? JSON.parse(raw) : [];
+        list.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
+        setRegistrations(list);
+      } catch (e) {
+        console.error("Failed to parse local registrations:", e);
+      } finally {
+        setIsRegsLoading(false);
+      }
+    }
+  }, [activeTab]);
+
+  const handleDeleteRegistration = async (regNo: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus data pendaftaran ${regNo}?`)) {
+      if (isFirebaseConfigured && db) {
+        try {
+          await deleteDoc(doc(db, "registrations", regNo));
+          setRegistrations(prev => prev.filter(r => r.regNo !== regNo));
+        } catch (e) {
+          console.error("Failed to delete registration from Firestore:", e);
+          alert("Gagal menghapus data.");
+        }
+      } else {
+        const raw = localStorage.getItem("sdn3_registrations");
+        if (raw) {
+          const list = JSON.parse(raw);
+          const updated = list.filter((r: any) => r.regNo !== regNo);
+          localStorage.setItem("sdn3_registrations", JSON.stringify(updated));
+          setRegistrations(updated);
+        }
+      }
+    }
+  };
 
   // Developer Modes (HTML / JSON Editor State)
   const [devSubTab, setDevSubTab] = useState<"html" | "json">("json");
@@ -580,6 +639,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                 >
                   <Newspaper size={14} />
                   Kelola Berita
+                </button>
+
+                <button
+                  onClick={() => { setActiveTab("registrations"); setIsAdding(false); setEditingId(null); }}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
+                    activeTab === "registrations"
+                      ? "bg-blue-600 text-white font-bold"
+                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  }`}
+                >
+                  <Users size={14} />
+                  Pendaftar PPDB
                 </button>
 
                 <button
@@ -1404,6 +1475,112 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           </div>
                         ))
                       )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 5.5 MANAGE PPDB REGISTRATIONS TAB */}
+              {activeTab === "registrations" && (
+                <div className="w-full space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4.5 rounded-2xl border border-slate-200 gap-3">
+                    <div>
+                      <h4 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">Daftar Pendaftar PPDB Online</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Pantau data prapendaftaran calon peserta didik baru yang masuk secara real-time.</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsRegsLoading(true);
+                        if (isFirebaseConfigured && db) {
+                          getDocs(query(collection(db, "registrations"), orderBy("timestamp", "desc")))
+                            .then((snapshot) => {
+                              const list = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+                              setRegistrations(list);
+                            })
+                            .catch(err => console.error(err))
+                            .finally(() => setIsRegsLoading(false));
+                        } else {
+                          try {
+                            const raw = localStorage.getItem("sdn3_registrations");
+                            const list = raw ? JSON.parse(raw) : [];
+                            list.sort((a: any, b: any) => (b.timestamp || 0) - (a.timestamp || 0));
+                            setRegistrations(list);
+                          } catch(e) {}
+                          setIsRegsLoading(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      Refresh Data
+                    </button>
+                  </div>
+
+                  {isRegsLoading ? (
+                    <div className="bg-white rounded-2xl p-12 text-center text-xs font-semibold text-slate-400 border border-slate-150">
+                      Memuat data pendaftar...
+                    </div>
+                  ) : registrations.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-12 text-center text-xs text-slate-400 border border-slate-150">
+                      Belum ada calon siswa yang mendaftar online.
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-2xl border border-slate-150 overflow-hidden shadow-sm">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs md:text-sm">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-150 text-slate-500 font-extrabold uppercase text-[10px] tracking-wider">
+                              <th className="px-5 py-3">No. Pendaftaran</th>
+                              <th className="px-5 py-3">Nama Siswa</th>
+                              <th className="px-5 py-3">NIK</th>
+                              <th className="px-5 py-3">Orang Tua</th>
+                              <th className="px-5 py-3">No. Telp</th>
+                              <th className="px-5 py-3">Jalur</th>
+                              <th className="px-5 py-3">Tanggal Daftar</th>
+                              <th className="px-5 py-3 text-center">Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-700">
+                            {registrations.map((reg) => (
+                              <tr key={reg.id || reg.regNo} className="hover:bg-slate-50/50">
+                                <td className="px-5 py-3.5 font-bold text-blue-900 font-mono">{reg.regNo}</td>
+                                <td className="px-5 py-3.5 font-bold text-slate-800">
+                                  <div className="flex flex-col">
+                                    <span>{reg.studentName}</span>
+                                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase w-max mt-1 ${
+                                      reg.gender === "Laki-laki" ? "bg-blue-50 text-blue-700" : "bg-pink-50 text-pink-700"
+                                    }`}>{reg.gender}</span>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-3.5 font-mono text-slate-500">{reg.nik}</td>
+                                <td className="px-5 py-3.5 font-semibold">{reg.parentName}</td>
+                                <td className="px-5 py-3.5">{reg.parentPhone}</td>
+                                <td className="px-5 py-3.5">
+                                  <span className="bg-amber-50 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                                    {reg.pathway}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3.5 text-slate-400">{reg.submittedAt}</td>
+                                <td className="px-5 py-3.5 text-center">
+                                  <div className="flex gap-1.5 justify-center">
+                                    <button
+                                      onClick={() => alert(`Detail Pendaftar:\n\nNama: ${reg.studentName} (${reg.gender})\nNIK: ${reg.nik}\nTempat/Tgl Lahir: ${reg.birthPlace}, ${reg.birthDate}\nWali/Ortu: ${reg.parentName}\nTelepon: ${reg.parentPhone}\nJalur: ${reg.pathway}\nAlamat: ${reg.address}`)}
+                                      className="p-1 px-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-[10px] font-bold cursor-pointer"
+                                    >
+                                      Detail
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteRegistration(reg.regNo)}
+                                      className="p-1 px-2.5 bg-red-50 text-red-650 hover:bg-red-100 rounded-lg text-[10px] font-bold cursor-pointer"
+                                    >
+                                      Hapus
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>

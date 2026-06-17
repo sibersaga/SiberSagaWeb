@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { FAQItem, RegistrationData } from "../types";
 import { useAdmin } from "../context/AdminContext";
+import { db, isFirebaseConfigured } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SpmbFaq() {
   const { faqs } = useAdmin();
@@ -57,7 +59,7 @@ export default function SpmbFaq() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.studentName || !formData.nik || !formData.birthPlace || !formData.birthDate || !formData.parentName || !formData.parentPhone || !formData.address) {
       alert("Harap lengkapi semua isian formulir terlebih dahulu!");
@@ -65,32 +67,87 @@ export default function SpmbFaq() {
     }
     setIsSubmitting(true);
 
-    // Simulate database api delay
-    setTimeout(() => {
-      const randomId = Math.floor(1000 + Math.random() * 9000);
-      const today = new Date();
-      const submittedAtDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()} ${today.getHours()}:${String(today.getMinutes()).padStart(2, "0")} WIB`;
-      
-      setSubmissionReceipt({
-        regNo: `REG/PPDB-${today.getFullYear()}/${randomId}`,
-        submittedAt: submittedAtDate,
-        data: { ...formData }, // store exact clone
-      });
-      setIsSubmitting(false);
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const today = new Date();
+    const submittedAtDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()} ${today.getHours()}:${String(today.getMinutes()).padStart(2, "0")} WIB`;
+    const regNo = `REG/PPDB-${today.getFullYear()}/${randomId}`;
 
-      // Reset fields
-      setFormData({
-        studentName: "",
-        nik: "",
-        gender: "Laki-laki",
-        birthPlace: "",
-        birthDate: "",
-        parentName: "",
-        parentPhone: "",
-        address: "",
-        pathway: "Zonasi",
-      });
-    }, 1200);
+    const submissionData = {
+      regNo,
+      submittedAt: submittedAtDate,
+      timestamp: Date.now(),
+      studentName: formData.studentName,
+      nik: formData.nik,
+      gender: formData.gender,
+      birthPlace: formData.birthPlace,
+      birthDate: formData.birthDate,
+      parentName: formData.parentName,
+      parentPhone: formData.parentPhone,
+      address: formData.address,
+      pathway: formData.pathway
+    };
+
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, "registrations", regNo), submissionData);
+        setSubmissionReceipt({
+          regNo,
+          submittedAt: submittedAtDate,
+          data: { ...formData },
+        });
+        
+        // Reset fields
+        setFormData({
+          studentName: "",
+          nik: "",
+          gender: "Laki-laki",
+          birthPlace: "",
+          birthDate: "",
+          parentName: "",
+          parentPhone: "",
+          address: "",
+          pathway: "Zonasi",
+        });
+      } catch (err: any) {
+        console.error("Error saving registration to Firestore:", err);
+        alert("Gagal menyimpan ke cloud. Periksa koneksi internet Anda atau coba lagi.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      // LocalStorage Fallback Mode
+      setTimeout(() => {
+        try {
+          const raw = localStorage.getItem("sdn3_registrations");
+          const currentList = raw ? JSON.parse(raw) : [];
+          currentList.push(submissionData);
+          localStorage.setItem("sdn3_registrations", JSON.stringify(currentList));
+
+          setSubmissionReceipt({
+            regNo,
+            submittedAt: submittedAtDate,
+            data: { ...formData },
+          });
+
+          // Reset fields
+          setFormData({
+            studentName: "",
+            nik: "",
+            gender: "Laki-laki",
+            birthPlace: "",
+            birthDate: "",
+            parentName: "",
+            parentPhone: "",
+            address: "",
+            pathway: "Zonasi",
+          });
+        } catch (error) {
+          console.error("LocalStorage save failed:", error);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }, 1000);
+    }
   };
 
   const handlePrintReceipt = () => {

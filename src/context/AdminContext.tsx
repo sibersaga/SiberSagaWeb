@@ -15,6 +15,16 @@ import {
   faqItems, 
   downloadFiles 
 } from "../data";
+import { db, isFirebaseConfigured } from "../firebase";
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc 
+} from "firebase/firestore";
 
 interface AdminContextType {
   programs: Program[];
@@ -43,7 +53,7 @@ interface AdminContextType {
   setAgendas: (agendas: AgendaEvent[]) => void;
   setNews: (news: NewsItem[]) => void;
   setAdmins: (admins: string[]) => void;
-
+  
   // Auth actions
   login: (email: string) => { success: boolean; error?: string };
   logout: () => void;
@@ -76,7 +86,7 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  // Load data from LocalStorage or fall back to default assets
+  // Local storage cache used as synchronous initial state
   const [programs, setProgramsState] = useState<Program[]>(() => {
     const raw = localStorage.getItem("sdn3_programs");
     return raw ? JSON.parse(raw) : schoolPrograms;
@@ -102,7 +112,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return raw ? JSON.parse(raw) : ["kridaloka.id@gmail.com", "sdn3purwosari@gmail.com"];
   });
 
-  // Extended collections
   const [stats, setStatsState] = useState<SchoolStat[]>(() => {
     const raw = localStorage.getItem("sdn3_stats");
     return raw ? JSON.parse(raw) : schoolStats;
@@ -135,78 +144,149 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return localStorage.getItem("sdn3_is_admin_mode") === "true";
   });
 
-  // Sync to local storage
-  const setPrograms = (data: Program[]) => {
-    setProgramsState(data);
-    localStorage.setItem("sdn3_programs", JSON.stringify(data));
-  };
-
-  const setAchievements = (data: Achievement[]) => {
-    setAchievementsState(data);
-    localStorage.setItem("sdn3_achievements", JSON.stringify(data));
-  };
-
-  const setAgendas = (data: AgendaEvent[]) => {
-    setAgendasState(data);
-    localStorage.setItem("sdn3_agendas", JSON.stringify(data));
-  };
-
-  const setNews = (data: NewsItem[]) => {
-    setNewsState(data);
-    localStorage.setItem("sdn3_news", JSON.stringify(data));
-  };
-
-  const setAdmins = (data: string[]) => {
-    setAdminsState(data);
-    localStorage.setItem("sdn3_admins", JSON.stringify(data));
-  };
-
-  const setStats = (data: SchoolStat[]) => {
-    setStatsState(data);
-    localStorage.setItem("sdn3_stats", JSON.stringify(data));
-  };
-
-  const setGallery = (data: GalleryPhoto[]) => {
-    setGalleryState(data);
-    localStorage.setItem("sdn3_gallery", JSON.stringify(data));
-  };
-
-  const setFaqs = (data: FAQItem[]) => {
-    setFaqsState(data);
-    localStorage.setItem("sdn3_faqs", JSON.stringify(data));
-  };
-
-  const setDownloads = (data: DownloadFile[]) => {
-    setDownloadsState(data);
-    localStorage.setItem("sdn3_downloads", JSON.stringify(data));
-  };
-
-  const updateCustomHTML = (html: string) => {
-    setCustomHTMLState(html);
-    localStorage.setItem("sdn3_custom_html", html);
-  };
-
-  // Keep original LocalStorage items in sync on load & update
+  // Asynchronously fetch/sync and seed Firebase Firestore data on mount
   useEffect(() => {
-    localStorage.setItem("sdn3_programs", JSON.stringify(programs));
-  }, [programs]);
+    if (!isFirebaseConfigured || !db) return;
 
-  useEffect(() => {
-    localStorage.setItem("sdn3_achievements", JSON.stringify(achievements));
-  }, [achievements]);
+    const loadData = async () => {
+      try {
+        // 1. Fetch Global settings (e.g. customHTML)
+        const globalSettingsDoc = await getDoc(doc(db!, "settings", "global"));
+        if (globalSettingsDoc.exists()) {
+          const fetchedHTML = globalSettingsDoc.data().customHTML || "";
+          setCustomHTMLState(fetchedHTML);
+          localStorage.setItem("sdn3_custom_html", fetchedHTML);
+        } else {
+          // Initialize in DB
+          await setDoc(doc(db!, "settings", "global"), { customHTML: "" });
+        }
 
-  useEffect(() => {
-    localStorage.setItem("sdn3_agendas", JSON.stringify(agendas));
-  }, [agendas]);
+        // Helper to fetch collection
+        const fetchCollection = async (colName: string) => {
+          const snapshot = await getDocs(collection(db!, colName));
+          return snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        };
 
-  useEffect(() => {
-    localStorage.setItem("sdn3_news", JSON.stringify(news));
-  }, [news]);
+        // A. Programs
+        const fbPrograms = await fetchCollection("programs");
+        if (fbPrograms.length > 0) {
+          setProgramsState(fbPrograms as Program[]);
+          localStorage.setItem("sdn3_programs", JSON.stringify(fbPrograms));
+        } else {
+          // Seeding DB with defaults
+          for (const item of schoolPrograms) {
+            await setDoc(doc(db!, "programs", item.id), item);
+          }
+          setProgramsState(schoolPrograms);
+        }
 
-  useEffect(() => {
-    localStorage.setItem("sdn3_admins", JSON.stringify(admins));
-  }, [admins]);
+        // B. Achievements
+        const fbAchievements = await fetchCollection("achievements");
+        if (fbAchievements.length > 0) {
+          setAchievementsState(fbAchievements as Achievement[]);
+          localStorage.setItem("sdn3_achievements", JSON.stringify(fbAchievements));
+        } else {
+          for (const item of schoolAchievements) {
+            await setDoc(doc(db!, "achievements", item.id), item);
+          }
+          setAchievementsState(schoolAchievements);
+        }
 
+        // C. Agendas
+        const fbAgendas = await fetchCollection("agendas");
+        if (fbAgendas.length > 0) {
+          setAgendasState(fbAgendas as AgendaEvent[]);
+          localStorage.setItem("sdn3_agendas", JSON.stringify(fbAgendas));
+        } else {
+          for (const item of agendaEvents) {
+            await setDoc(doc(db!, "agendas", item.id), item);
+          }
+          setAgendasState(agendaEvents);
+        }
+
+        // D. News
+        const fbNews = await fetchCollection("news");
+        if (fbNews.length > 0) {
+          setNewsState(fbNews as NewsItem[]);
+          localStorage.setItem("sdn3_news", JSON.stringify(fbNews));
+        } else {
+          for (const item of latestNews) {
+            await setDoc(doc(db!, "news", item.id), item);
+          }
+          setNewsState(latestNews);
+        }
+
+        // E. Stats
+        const fbStats = await fetchCollection("stats");
+        if (fbStats.length > 0) {
+          setStatsState(fbStats as SchoolStat[]);
+          localStorage.setItem("sdn3_stats", JSON.stringify(fbStats));
+        } else {
+          for (const item of schoolStats) {
+            await setDoc(doc(db!, "stats", item.id), item);
+          }
+          setStatsState(schoolStats);
+        }
+
+        // F. Gallery
+        const fbGallery = await fetchCollection("gallery");
+        if (fbGallery.length > 0) {
+          setGalleryState(fbGallery as GalleryPhoto[]);
+          localStorage.setItem("sdn3_gallery", JSON.stringify(fbGallery));
+        } else {
+          for (const item of galleryPhotos) {
+            await setDoc(doc(db!, "gallery", item.id), item);
+          }
+          setGalleryState(galleryPhotos);
+        }
+
+        // G. FAQs
+        const fbFaqs = await fetchCollection("faqs");
+        if (fbFaqs.length > 0) {
+          setFaqsState(fbFaqs as FAQItem[]);
+          localStorage.setItem("sdn3_faqs", JSON.stringify(fbFaqs));
+        } else {
+          for (const item of faqItems) {
+            await setDoc(doc(db!, "faqs", item.id), item);
+          }
+          setFaqsState(faqItems);
+        }
+
+        // H. Downloads
+        const fbDownloads = await fetchCollection("downloads");
+        if (fbDownloads.length > 0) {
+          setDownloadsState(fbDownloads as DownloadFile[]);
+          localStorage.setItem("sdn3_downloads", JSON.stringify(fbDownloads));
+        } else {
+          for (const item of downloadFiles) {
+            await setDoc(doc(db!, "downloads", item.id), item);
+          }
+          setDownloadsState(downloadFiles);
+        }
+
+        // I. Admins
+        const fbAdminsSnapshot = await getDocs(collection(db!, "admins"));
+        const fbAdmins = fbAdminsSnapshot.docs.map(d => d.id);
+        if (fbAdmins.length > 0) {
+          setAdminsState(fbAdmins);
+          localStorage.setItem("sdn3_admins", JSON.stringify(fbAdmins));
+        } else {
+          const defaultAdmins = ["kridaloka.id@gmail.com", "sdn3purwosari@gmail.com"];
+          for (const email of defaultAdmins) {
+            await setDoc(doc(db!, "admins", email), { enabled: true });
+          }
+          setAdminsState(defaultAdmins);
+        }
+
+      } catch (err) {
+        console.error("Firestore sync failed, falling back to LocalStorage cached states:", err);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Update Auth persistence
   useEffect(() => {
     if (currentUserEmail) {
       localStorage.setItem("sdn3_current_user", currentUserEmail);
@@ -218,6 +298,101 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       setIsAdminMode(false);
     }
   }, [currentUserEmail]);
+
+  // Bulk synchronizer helper (wipes collection and writes new array)
+  const syncCollectionToFirestore = async (colName: string, data: any[]) => {
+    if (!isFirebaseConfigured || !db) return;
+    try {
+      const snapshot = await getDocs(collection(db, colName));
+      for (const d of snapshot.docs) {
+        await deleteDoc(doc(db, colName, d.id));
+      }
+      for (const item of data) {
+        await setDoc(doc(db, colName, item.id), item);
+      }
+    } catch (e) {
+      console.error(`Error syncing ${colName} to Firestore:`, e);
+    }
+  };
+
+  // Bulk Setter Sync Actions
+  const setPrograms = (data: Program[]) => {
+    setProgramsState(data);
+    localStorage.setItem("sdn3_programs", JSON.stringify(data));
+    syncCollectionToFirestore("programs", data);
+  };
+
+  const setAchievements = (data: Achievement[]) => {
+    setAchievementsState(data);
+    localStorage.setItem("sdn3_achievements", JSON.stringify(data));
+    syncCollectionToFirestore("achievements", data);
+  };
+
+  const setAgendas = (data: AgendaEvent[]) => {
+    setAgendasState(data);
+    localStorage.setItem("sdn3_agendas", JSON.stringify(data));
+    syncCollectionToFirestore("agendas", data);
+  };
+
+  const setNews = (data: NewsItem[]) => {
+    setNewsState(data);
+    localStorage.setItem("sdn3_news", JSON.stringify(data));
+    syncCollectionToFirestore("news", data);
+  };
+
+  const setAdmins = async (data: string[]) => {
+    setAdminsState(data);
+    localStorage.setItem("sdn3_admins", JSON.stringify(data));
+    if (isFirebaseConfigured && db) {
+      try {
+        const snapshot = await getDocs(collection(db, "admins"));
+        for (const d of snapshot.docs) {
+          await deleteDoc(doc(db, "admins", d.id));
+        }
+        for (const email of data) {
+          await setDoc(doc(db, "admins", email), { enabled: true });
+        }
+      } catch (e) {
+        console.error("Error syncing admins to Firestore:", e);
+      }
+    }
+  };
+
+  const setStats = (data: SchoolStat[]) => {
+    setStatsState(data);
+    localStorage.setItem("sdn3_stats", JSON.stringify(data));
+    syncCollectionToFirestore("stats", data);
+  };
+
+  const setGallery = (data: GalleryPhoto[]) => {
+    setGalleryState(data);
+    localStorage.setItem("sdn3_gallery", JSON.stringify(data));
+    syncCollectionToFirestore("gallery", data);
+  };
+
+  const setFaqs = (data: FAQItem[]) => {
+    setFaqsState(data);
+    localStorage.setItem("sdn3_faqs", JSON.stringify(data));
+    syncCollectionToFirestore("faqs", data);
+  };
+
+  const setDownloads = (data: DownloadFile[]) => {
+    setDownloadsState(data);
+    localStorage.setItem("sdn3_downloads", JSON.stringify(data));
+    syncCollectionToFirestore("downloads", data);
+  };
+
+  const updateCustomHTML = async (html: string) => {
+    setCustomHTMLState(html);
+    localStorage.setItem("sdn3_custom_html", html);
+    if (isFirebaseConfigured && db) {
+      try {
+        await setDoc(doc(db, "settings", "global"), { customHTML: html });
+      } catch (e) {
+        console.error("Error saving customHTML settings in Firestore:", e);
+      }
+    }
+  };
 
   // Auth functions
   const login = (email: string) => {
@@ -245,7 +420,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (admins.map(a => a.toLowerCase()).includes(trimmedEmail)) {
       return { success: false, error: "Email admin sudah terdaftar." };
     }
-    setAdmins([...admins, trimmedEmail]);
+    const updatedAdmins = [...admins, trimmedEmail];
+    setAdminsState(updatedAdmins);
+    localStorage.setItem("sdn3_admins", JSON.stringify(updatedAdmins));
+    
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, "admins", trimmedEmail), { enabled: true }).catch(err => {
+        console.error("Failed to add admin to Firestore:", err);
+      });
+    }
     return { success: true };
   };
 
@@ -257,64 +440,168 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (currentUserEmail?.toLowerCase() === trimmedEmail) {
       return { success: false, error: "Anda tidak bisa menghapus email Anda sendiri yang sedang aktif." };
     }
-    setAdmins(admins.filter(a => a.toLowerCase() !== trimmedEmail));
+    const updatedAdmins = admins.filter(a => a.toLowerCase() !== trimmedEmail);
+    setAdminsState(updatedAdmins);
+    localStorage.setItem("sdn3_admins", JSON.stringify(updatedAdmins));
+
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, "admins", trimmedEmail)).catch(err => {
+        console.error("Failed to delete admin from Firestore:", err);
+      });
+    }
     return { success: true };
   };
 
   // Program CRUD
   const addProgram = (p: Omit<Program, "id">) => {
     const nextId = "prog-custom-" + Date.now();
-    setPrograms([...programs, { ...p, id: nextId }]);
+    const newProg = { ...p, id: nextId };
+    setProgramsState(prev => [...prev, newProg]);
+    localStorage.setItem("sdn3_programs", JSON.stringify([...programs, newProg]));
+
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, "programs", nextId), newProg).catch(err => {
+        console.error("Failed to add program to Firestore:", err);
+      });
+    }
   };
 
   const updateProgram = (id: string, updated: Partial<Program>) => {
-    setPrograms(programs.map(p => p.id === id ? { ...p, ...updated } : p));
+    const updatedProgs = programs.map(p => p.id === id ? { ...p, ...updated } : p);
+    setProgramsState(updatedProgs);
+    localStorage.setItem("sdn3_programs", JSON.stringify(updatedProgs));
+
+    if (isFirebaseConfigured && db) {
+      updateDoc(doc(db, "programs", id), updated).catch(err => {
+        console.error("Failed to update program in Firestore:", err);
+      });
+    }
   };
 
   const deleteProgram = (id: string) => {
-    setPrograms(programs.filter(p => p.id !== id));
+    const updatedProgs = programs.filter(p => p.id !== id);
+    setProgramsState(updatedProgs);
+    localStorage.setItem("sdn3_programs", JSON.stringify(updatedProgs));
+
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, "programs", id)).catch(err => {
+        console.error("Failed to delete program from Firestore:", err);
+      });
+    }
   };
 
   // Achievement CRUD
   const addAchievement = (a: Omit<Achievement, "id">) => {
     const nextId = "ach-custom-" + Date.now();
-    setAchievements([...achievements, { ...a, id: nextId }]);
+    const newAch = { ...a, id: nextId };
+    setAchievementsState(prev => [...prev, newAch]);
+    localStorage.setItem("sdn3_achievements", JSON.stringify([...achievements, newAch]));
+
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, "achievements", nextId), newAch).catch(err => {
+        console.error("Failed to add achievement to Firestore:", err);
+      });
+    }
   };
 
   const updateAchievement = (id: string, updated: Partial<Achievement>) => {
-    setAchievements(achievements.map(a => a.id === id ? { ...a, ...updated } : a));
+    const updatedAchs = achievements.map(a => a.id === id ? { ...a, ...updated } : a);
+    setAchievementsState(updatedAchs);
+    localStorage.setItem("sdn3_achievements", JSON.stringify(updatedAchs));
+
+    if (isFirebaseConfigured && db) {
+      updateDoc(doc(db, "achievements", id), updated).catch(err => {
+        console.error("Failed to update achievement in Firestore:", err);
+      });
+    }
   };
 
   const deleteAchievement = (id: string) => {
-    setAchievements(achievements.filter(a => a.id !== id));
+    const updatedAchs = achievements.filter(a => a.id !== id);
+    setAchievementsState(updatedAchs);
+    localStorage.setItem("sdn3_achievements", JSON.stringify(updatedAchs));
+
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, "achievements", id)).catch(err => {
+        console.error("Failed to delete achievement from Firestore:", err);
+      });
+    }
   };
 
   // Agenda CRUD
   const addAgenda = (ag: Omit<AgendaEvent, "id">) => {
     const nextId = "evt-custom-" + Date.now();
-    setAgendas([...agendas, { ...ag, id: nextId }]);
+    const newAg = { ...ag, id: nextId };
+    setAgendasState(prev => [...prev, newAg]);
+    localStorage.setItem("sdn3_agendas", JSON.stringify([...agendas, newAg]));
+
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, "agendas", nextId), newAg).catch(err => {
+        console.error("Failed to add agenda to Firestore:", err);
+      });
+    }
   };
 
   const updateAgenda = (id: string, updated: Partial<AgendaEvent>) => {
-    setAgendas(agendas.map(ag => ag.id === id ? { ...ag, ...updated } : ag));
+    const updatedAgs = agendas.map(ag => ag.id === id ? { ...ag, ...updated } : ag);
+    setAgendasState(updatedAgs);
+    localStorage.setItem("sdn3_agendas", JSON.stringify(updatedAgs));
+
+    if (isFirebaseConfigured && db) {
+      updateDoc(doc(db, "agendas", id), updated).catch(err => {
+        console.error("Failed to update agenda in Firestore:", err);
+      });
+    }
   };
 
   const deleteAgenda = (id: string) => {
-    setAgendas(agendas.filter(ag => ag.id !== id));
+    const updatedAgs = agendas.filter(ag => ag.id !== id);
+    setAgendasState(updatedAgs);
+    localStorage.setItem("sdn3_agendas", JSON.stringify(updatedAgs));
+
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, "agendas", id)).catch(err => {
+        console.error("Failed to delete agenda from Firestore:", err);
+      });
+    }
   };
 
   // News CRUD
   const addNews = (n: Omit<NewsItem, "id">) => {
     const nextId = "news-custom-" + Date.now();
-    setNews([...news, { ...n, id: nextId }]);
+    const newN = { ...n, id: nextId };
+    setNewsState(prev => [...prev, newN]);
+    localStorage.setItem("sdn3_news", JSON.stringify([...news, newN]));
+
+    if (isFirebaseConfigured && db) {
+      setDoc(doc(db, "news", nextId), newN).catch(err => {
+        console.error("Failed to add news to Firestore:", err);
+      });
+    }
   };
 
   const updateNews = (id: string, updated: Partial<NewsItem>) => {
-    setNews(news.map(n => n.id === id ? { ...n, ...updated } : n));
+    const updatedNewsList = news.map(n => n.id === id ? { ...n, ...updated } : n);
+    setNewsState(updatedNewsList);
+    localStorage.setItem("sdn3_news", JSON.stringify(updatedNewsList));
+
+    if (isFirebaseConfigured && db) {
+      updateDoc(doc(db, "news", id), updated).catch(err => {
+        console.error("Failed to update news in Firestore:", err);
+      });
+    }
   };
 
   const deleteNews = (id: string) => {
-    setNews(news.filter(n => n.id !== id));
+    const updatedNewsList = news.filter(n => n.id !== id);
+    setNewsState(updatedNewsList);
+    localStorage.setItem("sdn3_news", JSON.stringify(updatedNewsList));
+
+    if (isFirebaseConfigured && db) {
+      deleteDoc(doc(db, "news", id)).catch(err => {
+        console.error("Failed to delete news from Firestore:", err);
+      });
+    }
   };
 
   return (
