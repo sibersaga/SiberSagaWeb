@@ -9,6 +9,8 @@ import {
   Lock,
   Unlock,
   Mail,
+  KeyRound,
+  User,
   Plus,
   Trash2,
   Edit2,
@@ -41,8 +43,11 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     news,
     admins,
     currentUserEmail,
+    manualLoginUsername,
+    isManualLoginEnabled,
     login,
     logout,
+    updateManualLogin,
     addProgram,
     updateProgram,
     deleteProgram,
@@ -75,7 +80,10 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   } = useAdmin();
 
   // Login Form state
+  const [loginMode, setLoginMode] = useState<"email" | "manual">("email");
   const [loginEmail, setLoginEmail] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
   // Tab state
@@ -178,6 +186,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   // New admin state
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [adminStatus, setAdminStatus] = useState({ success: true, message: "" });
+  const [manualUsername, setManualUsername] = useState(manualLoginUsername);
+  const [manualPassword, setManualPassword] = useState("");
+  const [manualPasswordConfirm, setManualPasswordConfirm] = useState("");
+  const [manualLoginStatus, setManualLoginStatus] = useState({ success: true, message: "" });
+
+  useEffect(() => {
+    setManualUsername(manualLoginUsername);
+  }, [manualLoginUsername]);
 
   // CRUD Item states
   const [programForm, setProgramForm] = useState<Omit<Program, "id">>({
@@ -267,14 +283,19 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-    const res = login(loginEmail);
+    const res = loginMode === "email"
+      ? await login(loginEmail)
+      : await login(loginUsername, loginPassword);
+
     if (!res.success) {
       setLoginError(res.error || "Gagal masuk.");
     } else {
       setLoginEmail("");
+      setLoginUsername("");
+      setLoginPassword("");
     }
   };
 
@@ -296,6 +317,25 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       if (!res.success) {
         alert(res.error);
       }
+    }
+  };
+
+  const handleManualLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualLoginStatus({ success: true, message: "" });
+
+    if (manualPassword !== manualPasswordConfirm) {
+      setManualLoginStatus({ success: false, message: "Konfirmasi password belum sama." });
+      return;
+    }
+
+    const res = await updateManualLogin(manualUsername, manualPassword);
+    if (res.success) {
+      setManualPassword("");
+      setManualPasswordConfirm("");
+      setManualLoginStatus({ success: true, message: "Login manual berhasil disimpan." });
+    } else {
+      setManualLoginStatus({ success: false, message: res.error || "Gagal menyimpan login manual." });
     }
   };
 
@@ -528,27 +568,85 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   Pintu Masuk Admin
                 </h4>
                 <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                  Masukkan email terdaftar Anda untuk memverifikasi hak akses administratif keamanan penuh.
+                  Masuk memakai email admin atau username manual yang sudah diseting di panel.
                 </p>
               </div>
 
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl mb-4">
+                <button
+                  type="button"
+                  onClick={() => { setLoginMode("email"); setLoginError(""); }}
+                  className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    loginMode === "email" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginMode("manual"); setLoginError(""); }}
+                  className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    loginMode === "manual" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Manual
+                </button>
+              </div>
+
               <form onSubmit={handleLoginSubmit} className="space-y-4">
-                <div>
-                  <label className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 block mb-1">
-                    Alamat Email Admin
-                  </label>
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-3.5 text-slate-400" />
-                    <input
-                      type="email"
-                      required
-                      placeholder="contoh: kridaloka.id@gmail.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs md:text-sm font-medium transition-all"
-                    />
+                {loginMode === "email" ? (
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 block mb-1">
+                      Alamat Email Admin
+                    </label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="websdn3purwosari@gmail.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs md:text-sm font-medium transition-all"
+                      />
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 block mb-1">
+                        Username
+                      </label>
+                      <div className="relative">
+                        <User size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          required
+                          placeholder={isManualLoginEnabled ? "Masukkan username" : "Belum diseting"}
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs md:text-sm font-medium transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[11px] uppercase tracking-wider font-extrabold text-slate-500 block mb-1">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <KeyRound size={16} className="absolute left-3 top-3.5 text-slate-400" />
+                        <input
+                          type="password"
+                          required
+                          placeholder="Masukkan password"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          className="w-full pl-10 pr-4 py-3 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs md:text-sm font-medium transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {loginError && (
                   <div className="bg-red-50 p-3 rounded-xl border border-red-100 flex items-start gap-2 text-red-700 text-xs text-left">
@@ -567,7 +665,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               </form>
 
               <div className="mt-5 pt-4 border-t border-slate-100 text-[10px] text-slate-400 text-center leading-relaxed">
-                Tip: Gunakan email utama Anda <strong className="text-slate-650 font-bold">kridaloka.id@gmail.com</strong> sebagai akun admin pemula.
+                Email admin utama: <strong className="text-slate-650 font-bold">websdn3purwosari@gmail.com</strong>
               </div>
             </div>
           </div>
@@ -686,8 +784,79 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   <div className="flex justify-between items-center bg-white p-4.5 rounded-2xl border border-slate-200">
                     <div>
                       <h4 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">Kelola Hak Akses Admin</h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Tambah atau hapus email yang diperbolehkan masuk ke panel kontrol admin.</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Atur email admin dan login manual untuk masuk ke panel kontrol.</p>
                     </div>
+                  </div>
+
+                  {/* Manual Login Settings */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-150">
+                    <div className="flex items-start justify-between gap-3 mb-3.5">
+                      <div>
+                        <h5 className="font-bold text-slate-800 text-xs uppercase tracking-wide">Login Manual</h5>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {isManualLoginEnabled ? `Aktif untuk username "${manualLoginUsername}".` : "Belum aktif. Simpan username dan password untuk mengaktifkan."}
+                        </p>
+                      </div>
+                      <span className={`text-[9px] font-extrabold px-2 py-1 rounded uppercase ${
+                        isManualLoginEnabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"
+                      }`}>
+                        {isManualLoginEnabled ? "Aktif" : "Belum Aktif"}
+                      </span>
+                    </div>
+
+                    <form onSubmit={handleManualLoginSubmit} className="grid md:grid-cols-3 gap-2">
+                      <div className="relative">
+                        <User size={15} className="absolute left-3 top-3 text-slate-400" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="Username"
+                          value={manualUsername}
+                          onChange={(e) => setManualUsername(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs font-medium transition-all"
+                        />
+                      </div>
+                      <div className="relative">
+                        <KeyRound size={15} className="absolute left-3 top-3 text-slate-400" />
+                        <input
+                          type="password"
+                          required
+                          minLength={6}
+                          placeholder="Password baru"
+                          value={manualPassword}
+                          onChange={(e) => setManualPassword(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs font-medium transition-all"
+                        />
+                      </div>
+                      <div className="relative">
+                        <KeyRound size={15} className="absolute left-3 top-3 text-slate-400" />
+                        <input
+                          type="password"
+                          required
+                          minLength={6}
+                          placeholder="Ulangi password"
+                          value={manualPasswordConfirm}
+                          onChange={(e) => setManualPasswordConfirm(e.target.value)}
+                          className="w-full pl-9 pr-4 py-2 border border-slate-200 focus:border-blue-600 rounded-xl outline-none text-xs font-medium transition-all"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="md:col-span-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Check size={14} />
+                        Simpan Login Manual
+                      </button>
+                    </form>
+
+                    {manualLoginStatus.message && (
+                      <div className={`mt-3 p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                        manualLoginStatus.success ? "bg-emerald-50 text-emerald-800 border-emerald-100" : "bg-red-50 text-red-800 border-red-100"
+                      }`}>
+                        {manualLoginStatus.success ? <Check size={14} /> : <AlertCircle size={14} />}
+                        <span>{manualLoginStatus.message}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Add Admin Form */}
@@ -738,7 +907,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             </div>
                             <div>
                               <span className="text-xs font-semibold text-slate-800">{email}</span>
-                              {email === "kridaloka.id@gmail.com" && (
+                              {email === "websdn3purwosari@gmail.com" && (
                                 <span className="ml-2 bg-blue-100 text-blue-800 text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">Owner</span>
                               )}
                               {currentUserEmail?.toLowerCase() === email.toLowerCase() && (
@@ -747,7 +916,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                             </div>
                           </div>
                           
-                          {email !== "kridaloka.id@gmail.com" && currentUserEmail?.toLowerCase() !== email.toLowerCase() && (
+                          {email !== "websdn3purwosari@gmail.com" && currentUserEmail?.toLowerCase() !== email.toLowerCase() && (
                             <button
                               onClick={() => handleDeleteAdmin(email)}
                               className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition-all cursor-pointer"

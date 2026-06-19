@@ -32,6 +32,8 @@ interface AdminContextType {
   admins: string[];
   currentUserEmail: string | null;
   isAdminMode: boolean;
+  manualLoginUsername: string;
+  isManualLoginEnabled: boolean;
 
   stats: SchoolStat[];
   setStats: (stats: SchoolStat[]) => void;
@@ -50,7 +52,7 @@ interface AdminContextType {
   setNews: (news: NewsItem[]) => void;
   setAdmins: (admins: string[]) => void;
 
-  login: (email: string) => { success: boolean; error?: string };
+  login: (identifier: string, password?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 
   addProgram: (program: Omit<Program, "id">) => void;
@@ -71,10 +73,19 @@ interface AdminContextType {
 
   addAdmin: (email: string) => { success: boolean; error?: string };
   deleteAdmin: (email: string) => { success: boolean; error?: string };
+  updateManualLogin: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
-const DEFAULT_ADMINS = ["kridaloka.id@gmail.com", "sdn3purwosari@gmail.com"];
+const PRIMARY_ADMIN_EMAIL = "websdn3purwosari@gmail.com";
+const LEGACY_ADMIN_EMAILS = ["kridaloka.id@gmail.com", "sdn3purwosari@gmail.com"];
+const DEFAULT_ADMINS = [PRIMARY_ADMIN_EMAIL];
+
+interface ManualLoginConfig {
+  username: string;
+  passwordHash: string;
+  updatedAt?: string;
+}
 
 type CollectionName = "programs" | "achievements" | "agendas" | "news" | "stats" | "gallery" | "faqs" | "downloads";
 type CollectionPayload = Program | Achievement | AgendaEvent | NewsItem | SchoolStat | GalleryPhoto | FAQItem | DownloadFile;
@@ -114,18 +125,44 @@ function writeStorage<T>(key: string, data: T) {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
+function normalizeAdmins(data: string[]) {
+  const cleaned = data
+    .map((email) => email.trim().toLowerCase())
+    .filter((email) => email && !LEGACY_ADMIN_EMAILS.includes(email));
+
+  return Array.from(new Set([PRIMARY_ADMIN_EMAIL, ...cleaned]));
+}
+
+function readCurrentUser() {
+  const currentUser = readStorage<string | null>("sdn3_current_user", null);
+
+  if (!currentUser) return null;
+  if (currentUser.startsWith("manual:")) return currentUser;
+  if (currentUser.toLowerCase() === PRIMARY_ADMIN_EMAIL) return currentUser.toLowerCase();
+
+  return null;
+}
+
+async function hashPassword(password: string) {
+  const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(password));
+  return Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [programs, setProgramsState] = useState<Program[]>(() => readStorage(storageKeys.programs, schoolPrograms));
   const [achievements, setAchievementsState] = useState<Achievement[]>(() => readStorage(storageKeys.achievements, schoolAchievements));
   const [agendas, setAgendasState] = useState<AgendaEvent[]>(() => readStorage(storageKeys.agendas, agendaEvents));
   const [news, setNewsState] = useState<NewsItem[]>(() => readStorage(storageKeys.news, latestNews));
-  const [admins, setAdminsState] = useState<string[]>(() => readStorage("sdn3_admins", DEFAULT_ADMINS));
+  const [admins, setAdminsState] = useState<string[]>(() => normalizeAdmins(readStorage("sdn3_admins", DEFAULT_ADMINS)));
   const [stats, setStatsState] = useState<SchoolStat[]>(() => readStorage(storageKeys.stats, schoolStats));
   const [gallery, setGalleryState] = useState<GalleryPhoto[]>(() => readStorage(storageKeys.gallery, galleryPhotos));
   const [faqs, setFaqsState] = useState<FAQItem[]>(() => readStorage(storageKeys.faqs, faqItems));
   const [downloads, setDownloadsState] = useState<DownloadFile[]>(() => readStorage(storageKeys.downloads, downloadFiles));
   const [customHTML, setCustomHTMLState] = useState<string>(() => readStorage("sdn3_custom_html", ""));
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => readStorage<string | null>("sdn3_current_user", null));
+  const [manualLogin, setManualLogin] = useState<ManualLoginConfig | null>(() => readStorage<ManualLoginConfig | null>("sdn3_manual_admin_login", null));
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => readCurrentUser());
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => readStorage("sdn3_is_admin_mode", false));
 
   useEffect(() => {
@@ -168,6 +205,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           await upsertSetting("customHTML", "");
         }
 
+        const manualLoginResult = await getSetting<ManualLoginConfig>("manualAdminLogin");
+        if (manualLoginResult.error) throw manualLoginResult.error;
+
+        if (manualLoginResult.data?.username && manualLoginResult.data.passwordHash) {
+          apply(setManualLogin, "sdn3_manual_admin_login", manualLoginResult.data);
+        }
+
         await loadCollection("programs", setProgramsState, storageKeys.programs, schoolPrograms);
         await loadCollection("achievements", setAchievementsState, storageKeys.achievements, schoolAchievements);
         await loadCollection("agendas", setAgendasState, storageKeys.agendas, agendaEvents);
@@ -181,7 +225,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         if (adminsResult.error) throw adminsResult.error;
 
         if (adminsResult.data && adminsResult.data.length > 0) {
-          apply(setAdminsState, "sdn3_admins", adminsResult.data);
+          const normalizedAdmins = normalizeAdmins(adminsResult.data);
+          await upsertCollection("admins", normalizedAdmins.map((email) => ({ id: email, email })));
+          apply(setAdminsState, "sdn3_admins", normalizedAdmins);
         } else {
           await upsertCollection("admins", DEFAULT_ADMINS.map((email) => ({ id: email, email })));
           apply(setAdminsState, "sdn3_admins", DEFAULT_ADMINS);
@@ -245,12 +291,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   const setAdmins = async (data: string[]) => {
-    setAdminsState(data);
-    writeStorage("sdn3_admins", data);
+    const normalizedAdmins = normalizeAdmins(data);
+    setAdminsState(normalizedAdmins);
+    writeStorage("sdn3_admins", normalizedAdmins);
 
     if (isSupabaseConfigured) {
       try {
-        await upsertCollection("admins", data.map((email) => ({ id: email, email })));
+        await upsertCollection("admins", normalizedAdmins.map((email) => ({ id: email, email })));
       } catch (e) {
         console.error("Error syncing admins to Supabase:", e);
       }
@@ -294,8 +341,30 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = (email: string) => {
-    const trimmedEmail = email.trim().toLowerCase();
+  const login = async (identifier: string, password?: string) => {
+    const trimmedIdentifier = identifier.trim();
+
+    if (password !== undefined) {
+      if (!trimmedIdentifier || !password) {
+        return { success: false, error: "Username dan password tidak boleh kosong." };
+      }
+
+      if (!manualLogin?.username || !manualLogin.passwordHash) {
+        return { success: false, error: "Login manual belum diseting di menu admin." };
+      }
+
+      const passwordHash = await hashPassword(password);
+      const isUsernameValid = manualLogin.username.toLowerCase() === trimmedIdentifier.toLowerCase();
+
+      if (isUsernameValid && passwordHash === manualLogin.passwordHash) {
+        setCurrentUserEmail(`manual:${manualLogin.username}`);
+        return { success: true };
+      }
+
+      return { success: false, error: "Username atau password salah." };
+    }
+
+    const trimmedEmail = trimmedIdentifier.toLowerCase();
 
     if (!trimmedEmail) {
       return { success: false, error: "Email tidak boleh kosong" };
@@ -324,7 +393,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       return { success: false, error: "Email admin sudah terdaftar." };
     }
 
-    const updatedAdmins = [...admins, trimmedEmail];
+    const updatedAdmins = normalizeAdmins([...admins, trimmedEmail]);
     setAdminsState(updatedAdmins);
     writeStorage("sdn3_admins", updatedAdmins);
 
@@ -340,8 +409,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const deleteAdmin = (email: string) => {
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (trimmedEmail === "kridaloka.id@gmail.com") {
-      return { success: false, error: "Admin utama (kridaloka.id@gmail.com) tidak bisa dihapus." };
+    if (trimmedEmail === PRIMARY_ADMIN_EMAIL) {
+      return { success: false, error: `Admin utama (${PRIMARY_ADMIN_EMAIL}) tidak bisa dihapus.` };
     }
 
     if (currentUserEmail?.toLowerCase() === trimmedEmail) {
@@ -356,6 +425,37 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       deleteAdminFromSupabase(trimmedEmail).catch((err) => {
         console.error("Failed to delete admin from Supabase:", err);
       });
+    }
+
+    return { success: true };
+  };
+
+  const updateManualLogin = async (username: string, password: string) => {
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername || !password) {
+      return { success: false, error: "Username dan password tidak boleh kosong." };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: "Password minimal 6 karakter." };
+    }
+
+    const nextConfig: ManualLoginConfig = {
+      username: trimmedUsername,
+      passwordHash: await hashPassword(password),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setManualLogin(nextConfig);
+    writeStorage("sdn3_manual_admin_login", nextConfig);
+
+    if (isSupabaseConfigured) {
+      try {
+        await upsertSetting("manualAdminLogin", nextConfig);
+      } catch (e) {
+        console.error("Error saving manual admin login settings in Supabase:", e);
+      }
     }
 
     return { success: true };
@@ -523,6 +623,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         admins,
         currentUserEmail,
         isAdminMode,
+        manualLoginUsername: manualLogin?.username || "",
+        isManualLoginEnabled: Boolean(manualLogin?.username && manualLogin.passwordHash),
         stats,
         setStats,
         gallery,
@@ -554,6 +656,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         deleteNews,
         addAdmin,
         deleteAdmin,
+        updateManualLogin,
       }}
     >
       {children}
