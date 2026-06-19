@@ -45,6 +45,9 @@ interface AdminContextType {
   setDownloads: (files: DownloadFile[]) => void;
   customHTML: string;
   updateCustomHTML: (html: string) => void;
+  siteContent: SiteContent;
+  setSiteContent: (content: SiteContent) => Promise<{ success: boolean; error?: string }>;
+  updateSiteContent: (content: SiteContent) => Promise<{ success: boolean; error?: string }>;
 
   setPrograms: (programs: Program[]) => void;
   setAchievements: (achievements: Achievement[]) => void;
@@ -76,10 +79,278 @@ interface AdminContextType {
   updateManualLogin: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
+type SiteContent = {
+  topbar: {
+    contactEmail: string;
+    location: string;
+    instagramUrl: string;
+    youtubeUrl: string;
+  };
+  header: {
+    brandTitle: string;
+    tagline: string;
+    searchPlaceholder: string;
+    menu: Array<{ id: string; label: string }>;
+    searchItems: Array<{ title: string; id: string; category: string; desc: string }>;
+    shareText: string;
+    shareTitle: string;
+  };
+  hero: {
+    badge: string;
+    schoolName: string;
+    titlePrimary: string;
+    titleSecondary: string;
+    description: string;
+    primaryButton: string;
+    secondaryButton: string;
+    imageAlt: string;
+    fallbackBadge: string;
+    fallbackTitle: string;
+    fallbackSubtitle: string;
+    cards: Array<{ title: string; description: string }>;
+  };
+  welcome: {
+    eyebrow: string;
+    title: string;
+    description: string;
+    tabs: {
+      sambutan: {
+        label: string;
+        badge: string;
+        title: string;
+        leadImageAlt: string;
+        quote: string;
+        paragraphs: string[];
+        closing: string;
+      };
+      visi: {
+        label: string;
+        badge: string;
+        title: string;
+        intro: string;
+        description: string;
+        highlights: Array<{ title: string; desc: string }>;
+      };
+      misi: {
+        label: string;
+        badge: string;
+        title: string;
+        intro: string;
+        items: string[];
+        panelTitle: string;
+        panelDescription: string;
+        footerLeft: string;
+        footerRight: string;
+      };
+      tujuan: {
+        label: string;
+        badge: string;
+        title: string;
+        intro: string;
+        sideTitle: string;
+        sideDescription: string;
+        goals: Array<{ title: string; desc: string }>;
+      };
+    };
+  };
+  footer: {
+    brandTitle: string;
+    tagline: string;
+    description: string;
+    address: string;
+    phone: string;
+    email: string;
+    quickLinksTitle: string;
+    mediaTitle: string;
+    npsnInfo: string;
+    copyright: string;
+    adminButton: string;
+    bottomBrand: string;
+    links: Array<{ id: string; label: string }>;
+    socialUrls: {
+      instagram: string;
+      youtube: string;
+      tiktok: string;
+      facebook: string;
+    };
+  };
+  ticker: {
+    title: string;
+    items: string[];
+  };
+};
+
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 const PRIMARY_ADMIN_EMAIL = "websdn3purwosari@gmail.com";
 const LEGACY_ADMIN_EMAILS = ["kridaloka.id@gmail.com", "sdn3purwosari@gmail.com"];
 const DEFAULT_ADMINS = [PRIMARY_ADMIN_EMAIL];
+
+const DEFAULT_SITE_CONTENT: SiteContent = {
+  topbar: {
+    contactEmail: "websdn3purwosari@gmail.com",
+    location: "Wonogiri, Jawa Tengah",
+    instagramUrl: "https://instagram.com",
+    youtubeUrl: "https://youtube.com",
+  },
+  header: {
+    brandTitle: "SDN 3 PURWOSARI",
+    tagline: "Kabupaten Wonogiri • Terakreditasi A",
+    searchPlaceholder: "Cari program, guru, fasilitas, ppdb...",
+    menu: [
+      { id: "hero", label: "Beranda" },
+      { id: "sambutan", label: "Profil" },
+      { id: "program", label: "Akademik" },
+      { id: "prestasi", label: "Prestasi" },
+      { id: "inovasi", label: "Inovasi" },
+      { id: "berita", label: "Berita" },
+      { id: "galeri", label: "Galeri" },
+      { id: "spmb", label: "SPMB" },
+      { id: "download", label: "Download" },
+      { id: "kontak", label: "Kontak" },
+    ],
+    searchItems: [
+      { title: "Profil & Sambutan Kepala Sekolah", id: "sambutan", category: "Profil", desc: "Sambutan resmi Kepala Sekolah SDN 3 Purwosari, Kiswanto, S.Pd., M.Pd." },
+      { title: "Statistik & Capaian Sekolah", id: "stats", category: "Statistik", desc: "Data statistik akreditasi, rasio guru, dan statistik siswa aktif kelembagaan." },
+      { title: "Pendidik & Tenaga Kependidikan", id: "guru", category: "Profil", desc: "Daftar 12 pengajar berdedikasi dan staf administratif sekolah." },
+      { title: "Sarana & Prasarana Unggulan", id: "fasilitas", category: "Fasilitas", desc: "Detail fisik ruang kelas, laboratorium komputer, perpustakaan digital, dsb." },
+      { title: "Kondisi Siswa & Rombel Aktual", id: "kondisi", category: "Kondisi", desc: "Rincian sebaran rombongan belajar (rombel) kelas 1 sampai kelas 6." },
+      { title: "Program Unggulan Akademik & Ekskul", id: "program", category: "Akademik", desc: "Program unggulan, pembinaan keagamaan, bela diri, Pramuka, sains, dsb." },
+      { title: "Prestasi Kebanggaan Sekolah", id: "prestasi", category: "Akademik", desc: "Penghargaan nasional, regional, seni budaya, dan kejuaraan perlombaan." },
+      { title: "Portal Inovasi Unggulan & Dampak", id: "inovasi", category: "Inovasi", desc: "Smart Classroom, Bank Sampah Adiwiyata, dan Pojok Literasi Digital." },
+      { title: "Portal Berita & Informasi Kegiatan", id: "berita", category: "Informasi", desc: "Kabar terbaru kegiatan KBM, pameran seni, outbound, dsb." },
+      { title: "Agenda Kegiatan Utama", id: "agenda", category: "Informasi", desc: "Jadwal penting sekolah: pembagian raport, rapat wali murid, dan pendaftaran." },
+      { title: "Galeri Foto Dokumentasi KBM", id: "galeri", category: "Dokumentasi", desc: "Koleksi foto kegiatan belajar siswa di kelas dan ekstrakurikuler." },
+      { title: "Penerimaan Murid Baru (SPMB / FAQ)", id: "spmb", category: "PPDB", desc: "Formulir pendaftaran siswa baru, biaya gratis, FAQ pendaftaran." },
+      { title: "Pusat Unduhan Brosur & Dokumen", id: "download", category: "Dokumentasi", desc: "Pusat download berkas PDF brosur, kalender akademik, dan berkas syarat pendaftaran." },
+      { title: "Video Profil & Lokasi Sekolah", id: "kontak", category: "Kontak", desc: "Video dokumenter institusi, nomor telepon, email, dan integrasi Google Maps." },
+    ],
+    shareText: "Yuk kunjungi website resmi SDN 3 Purwosari Wonogiri!",
+    shareTitle: "Website Resmi SDN 3 Purwosari Wonogiri",
+  },
+  hero: {
+    badge: "Visi & Misi Sekolah",
+    schoolName: "SDN 3 PURWOSARI WONOGIRI",
+    titlePrimary: "Sekolah yang",
+    titleSecondary: "Unggul, Berkarakter & Berprestasi",
+    description: "Selamat datang di portal resmi SDN 3 Purwosari Wonogiri. Kami berkomitmen menyelenggarakan pendidikan bermutu tinggi, ramah anak, dan berbasis nilai-nilai luhur Pancasila demi masa depan gemilang anak bangsa.",
+    primaryButton: "Pendaftaran PPDB 2026",
+    secondaryButton: "Profil Sekolah",
+    imageAlt: "SDN 3 Purwosari Wonogiri Gedung Sekolah",
+    fallbackBadge: "Kampus Hijau Purwosari",
+    fallbackTitle: "Asri, Bersih, dan Terakreditasi A",
+    fallbackSubtitle: "Kampus Hijau Purwosari",
+    cards: [
+      { title: "Pendidikan Karakter", description: "Menanamkan budi pekerti jujur, religius, gotong royong." },
+      { title: "Guru Berkompetensi", description: "Dibimbing oleh tenaga pengajar profesional dan berdedikasi tinggi." },
+      { title: "Fasilitas Lengkap", description: "Laboratorium, perpustakaan nyaman, kebun Adiwiyata, & UKS." },
+    ],
+  },
+  welcome: {
+    eyebrow: "Eksplorasi Profil Sekolah",
+    title: "Sambutan, Visi, Misi & Tujuan",
+    description: "Mengenal lebih dekat arah fundamental pendidikan dasar, kepemimpinan, dan komitmen pelayanan mutu di lingkungan SDN 3 Purwosari.",
+    tabs: {
+      sambutan: {
+        label: "Sambutan Kepala Sekolah",
+        badge: "Profil Kepemimpinan",
+        title: "Mendidik dengan Hati, Merajut Prestasi",
+        leadImageAlt: "Kepala Sekolah SDN 3 Purwosari Wonogiri",
+        quote: "Mendidik dengan Hati, Mengantarkan Anak Didik Menjadi Generasi Emas yang Berbudi Luhur dan Unggul",
+        paragraphs: [
+          "Assalamu'alaikum Warahmatullahi Wabarakatuh,\nSalam Sejahtera bagi kita semua, Shalom, Om Swastyastu, Namo Buddhaya, Salam Kebajikan.",
+          "Puji syukur kehadirat Tuhan Yang Maha Esa atas limpahan rahmat-Nya sehingga kita dapat meluncurkan portal informasi resmi SDN 3 Purwosari Wonogiri. Selamat datang, sebuah kebanggaan bagi kami dapat bersinergi secara transparan demi memajukan mutu pendidikan dasar putra-putri tercinta.",
+          "Pendidikan tingkat dasar merupakan fondasi paling kritis dalam membentuk karakter anak. Kami meyakini, keunggulan akademis harus diimbangi oleh budi pekerti yang agung, fondasi religi yang kokoh, serta kesadaran peduli kelestarian lingkungan hidup ekologis.",
+          "Bersama 12 pendidik dan staf yang berdedikasi tinggi, kami berkomitmen menghadirkan lingkungan belajar yang aman, ramah anak, dan responsif terhadap tuntutan zaman. Terima kasih atas kepercayaan bapak/ibu wali murid sekalian. Mari bersama-sama mencetak calon pemimpin bangsa yang andal, kreatif, dan mandiri.",
+        ],
+        closing: "Wassalamu'alaikum Warahmatullahi Wabarakatuh.",
+      },
+      visi: {
+        label: "Visi Sekolah",
+        badge: "Arah Kebijakan",
+        title: "Terwujudnya Peserta Didik yang Berakhlak Mulia, Unggul dalam Prestasi, Kreatif, Mandiri, dan Berwawasan Lingkungan",
+        intro: "Visi ini merupakan landasan operasional pembelajaran terstruktur jangka panjang di SDN 3 Purwosari.",
+        description: "Melalui visi ini, SDN 3 Purwosari tidak hanya menuntut ketajaman prestasi kognitif, melainkan mengawal pembentukan pembiasaan akhlak mulia dan kecintaan murid terhadap konservasi alam demi keberlangsungan masa depan yang lestari.",
+        highlights: [
+          { title: "Akhlak Mulia", desc: "Sopan, religius, beradat ketimuran" },
+          { title: "Unggul Prestasi", desc: "Kompetitif akademis & non-akademis" },
+          { title: "Kreatif & Mandiri", desc: "Mampu bernalar kritis & mencari solusi" },
+          { title: "Eco-Friendly", desc: "Peduli kelestarian alam & kebersihan" },
+        ],
+      },
+      misi: {
+        label: "Misi Sekolah",
+        badge: "Langkah Strategis",
+        title: "Langkah Nyata Pelayanan Mutu",
+        intro: "Misi sekolah ini menjadi arah kerja harian seluruh warga sekolah.",
+        items: [
+          "Menanamkan keimanan dan ketakwaan melalui pengamalan nilai-nilai keagamaan dan pembiasaan akhlak mulia sejak dini.",
+          "Melaksanakan pembelajaran yang aktif, inovatif, kreatif, efektif, dan menyenangkan (PAIKEM) berbasis teknologi informasi.",
+          "Mengembangkan potensi, bakat, dan minat siswa secara optimal melalui bimbingan kepribadian dan ekstrakurikuler komprehensif.",
+          "Mendorong kemandirian belajar siswa melalui pembelajaran bermakna (meaningful learning) dan berbasis proyek (P5).",
+          "Menumbuhkan kesadaran dan kepedulian lingkungan hidup melalui program sekolah hijau (eco-school) dan kebersihan sirkular.",
+        ],
+        panelTitle: "Komitmen Bersama",
+        panelDescription: "Setiap poin misi di atas selalu dievaluasi per semester bersama Komite Sekolah dan Pengawas TK/SD Purwosari Wonogiri guna menjaga relevansi mutu dan kepatuhan akademis secara sinergis.",
+        footerLeft: "Standar Nasional Pendidikan",
+        footerRight: "Terakreditasi Unggul",
+      },
+      tujuan: {
+        label: "Tujuan Sekolah",
+        badge: "Pencapaian Institusi",
+        title: "Sasaran Strategis Jangka Menengah",
+        intro: "Target operasional sekolah yang terukur dan menjadi rujukan evaluasi capaian tahunan.",
+        sideTitle: "Membentuk Output Lulusan yang Siap, Berkarakter, dan Adaptif",
+        sideDescription: "Lulusan SDN 3 Purwosari dibekali keterampilan berpikir logis berbasis numerasi serta diimbangi karakter ketuhanan untuk melanjutkan ke jenjang SMP favorit.",
+        goals: [
+          { title: "Akhlak Luhur", desc: "Mempersiapkan lulusan taat ibadah, jujur, santun, dan toleran." },
+          { title: "Kelulusan 100%", desc: "Mencapai tingkat kelulusan paripurna dengan rata-rata nilai naik." },
+          { title: "Tim Kompetitif", desc: "Memiliki delegasi andalan dalam bidang olahraga, seni, & sains." },
+          { title: "Infrastruktur IT", desc: "Menyediakan sarana belajar ramah anak, nyaman dan berbasis digital." },
+        ],
+      },
+    },
+  },
+  footer: {
+    brandTitle: "SDN 3 PURWOSARI",
+    tagline: "Kabupaten Wonogiri • Terakreditasi A",
+    description: "Membentuk karakter berbudi luhur, unggul dalam prestasi akademis/non-akademis, kreatif, mandiri, serta berwawasan lingkungan.",
+    address: "Purwosari, Kec. Wonogiri, Jawa Tengah 57615",
+    phone: "+62 (0273) 321-456",
+    email: "websdn3purwosari@gmail.com",
+    quickLinksTitle: "Akses Cepat",
+    mediaTitle: "Media Sosial & Info",
+    npsnInfo: "NPSN: 203112223 • Siswa: 312 • Status: Negeri",
+    copyright: "© 2026 SDN 3 Purwosari Wonogiri. Hak Cipta Dilindungi Undang-Undang.",
+    adminButton: "Masuk Admin",
+    bottomBrand: "SDN 3 Purwosari Digital",
+    links: [
+      { id: "hero", label: "Beranda" },
+      { id: "sambutan", label: "Profil" },
+      { id: "program", label: "Akademik" },
+      { id: "prestasi", label: "Prestasi" },
+      { id: "berita", label: "Berita" },
+      { id: "spmb", label: "PPDB" },
+      { id: "download", label: "Download" },
+      { id: "kontak", label: "Kontak" },
+    ],
+    socialUrls: {
+      instagram: "https://instagram.com",
+      youtube: "https://youtube.com",
+      tiktok: "https://tiktok.com",
+      facebook: "https://facebook.com",
+    },
+  },
+  ticker: {
+    title: "Pengumuman Penting",
+    items: [
+      "Pendaftaran Peserta Didik Baru (PPDB) SDN 3 Purwosari Tahun Ajaran 2026/2027 Resmi Dibuka secara Online!",
+      "SDN 3 Purwosari Wonogiri Sukses Meraih Predikat Akreditasi 'A' (Unggul) dari BAN-PDM Jawa Tengah!",
+      "Agenda Imunisasi BIAS berkala dari Puskesmas Wonogiri II berjalan dengan tertib dan lancar.",
+      "Selamat atas prestasi luar biasa delegasi siswa SDN 3 Purwosari meraih Juara 1 LCC Umum Tingkat Kecamatan!",
+      "Bagi calon pendaftar PPDB, berkas fisik dapat diserahkan ke ruang sekretariat panitia pada hari kerja.",
+    ],
+  },
+};
 
 interface ManualLoginConfig {
   username: string;
@@ -161,6 +432,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [faqs, setFaqsState] = useState<FAQItem[]>(() => readStorage(storageKeys.faqs, faqItems));
   const [downloads, setDownloadsState] = useState<DownloadFile[]>(() => readStorage(storageKeys.downloads, downloadFiles));
   const [customHTML, setCustomHTMLState] = useState<string>(() => readStorage("sdn3_custom_html", ""));
+  const [siteContent, setSiteContentState] = useState<SiteContent>(() => readStorage("sdn3_site_content", DEFAULT_SITE_CONTENT));
   const [manualLogin, setManualLogin] = useState<ManualLoginConfig | null>(() => readStorage<ManualLoginConfig | null>("sdn3_manual_admin_login", null));
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => readCurrentUser());
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => readStorage("sdn3_is_admin_mode", false));
@@ -203,6 +475,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           apply(setCustomHTMLState, "sdn3_custom_html", settingsResult.data.customHTML || "");
         } else {
           await upsertSetting("customHTML", "");
+        }
+
+        const siteContentResult = await getSetting<SiteContent>("siteContent");
+        if (siteContentResult.error) throw siteContentResult.error;
+
+        if (siteContentResult.data) {
+          apply(setSiteContentState, "sdn3_site_content", siteContentResult.data);
+        } else {
+          await upsertSetting("siteContent", DEFAULT_SITE_CONTENT);
         }
 
         const manualLoginResult = await getSetting<ManualLoginConfig>("manualAdminLogin");
@@ -339,6 +620,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         console.error("Error saving customHTML settings in Supabase:", e);
       }
     }
+  };
+
+  const setSiteContent = async (content: SiteContent) => {
+    setSiteContentState(content);
+    writeStorage("sdn3_site_content", content);
+
+    if (isSupabaseConfigured) {
+      try {
+        await upsertSetting("siteContent", content);
+      } catch (e) {
+        console.error("Error saving siteContent settings in Supabase:", e);
+        return { success: false, error: "Gagal menyimpan konten situs." };
+      }
+    }
+
+    return { success: true };
   };
 
   const login = async (identifier: string, password?: string) => {
@@ -625,6 +922,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         isAdminMode,
         manualLoginUsername: manualLogin?.username || "",
         isManualLoginEnabled: Boolean(manualLogin?.username && manualLogin.passwordHash),
+        siteContent,
         stats,
         setStats,
         gallery,
@@ -635,6 +933,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         setDownloads,
         customHTML,
         updateCustomHTML,
+        setSiteContent,
+        updateSiteContent: setSiteContent,
         setPrograms,
         setAchievements,
         setAgendas,

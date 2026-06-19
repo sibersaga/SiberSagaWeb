@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import SchoolLogo from "./SchoolLogo";
+import { useAdmin } from "../context/AdminContext";
 
 interface HeaderProps {
   activeSection: string;
@@ -42,6 +43,7 @@ const spanVariants = {
 const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.5 };
 
 export default function Header({ activeSection }: HeaderProps) {
+  const { siteContent } = useAdmin();
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfilHovered, setIsProfilHovered] = useState(false);
@@ -51,22 +53,7 @@ export default function Header({ activeSection }: HeaderProps) {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  const searchItems = [
-    { title: "Profil & Sambutan Kepala Sekolah", id: "sambutan", category: "Profil", desc: "Sambutan resmi Kepala Sekolah SDN 3 Purwosari, Kiswanto, S.Pd., M.Pd." },
-    { title: "Statistik & Capaian Sekolah", id: "stats", category: "Statistik", desc: "Data statistik akreditasi, rasio guru, dan statistik siswa aktif kelembagaan." },
-    { title: "Pendidik & Tenaga Kependidikan", id: "guru", category: "Profil", desc: "Daftar 12 pengajar berdedikasi dan staf administratif sekolah." },
-    { title: "Sarana & Prasarana Unggulan", id: "fasilitas", category: "Fasilitas", desc: "Detail fisik ruang kelas, laboratorium komputer, perpustakaan digital, dsb." },
-    { title: "Kondisi Siswa & Rombel Aktual", id: "kondisi", category: "Kondisi", desc: "Rincian sebaran rombongan belajar (rombel) kelas 1 sampai kelas 6." },
-    { title: "Program Unggulan Akademik & Ekskul", id: "program", category: "Akademik", desc: "Program unggulan, pembinaan keagamaan, bela diri, Pramuka, sains, dsb." },
-    { title: "Prestasi Kebanggaan Sekolah", id: "prestasi", category: "Akademik", desc: "Penghargaan nasional, regional, seni budaya, dan kejuaraan perlombaan." },
-    { title: "Portal Inovasi Unggulan & Dampak", id: "inovasi", category: "Inovasi", desc: "Smart Classroom, Bank Sampah Adiwiyata, dan Pojok Literasi Digital." },
-    { title: "Portal Berita & Informasi Kegiatan", id: "berita", category: "Informasi", desc: "Kabar terbaru kegiatan KBM, pameran seni, outbound, dsb." },
-    { title: "Agenda Kegiatan Utama", id: "agenda", category: "Informasi", desc: "Jadwal penting sekolah: pembagian raport, rapat wali murid, dan pendaftaran." },
-    { title: "Galeri Foto Dokumentasi KBM", id: "galeri", category: "Dokumentasi", desc: "Koleksi foto kegiatan belajar siswa di kelas dan ekstrakurikuler." },
-    { title: "Penerimaan Murid Baru (SPMB / FAQ)", id: "spmb", category: "PPDB", desc: "Formulir pendaftaran siswa baru, biaya gratis, FAQ pendaftaran." },
-    { title: "Pusat Unduhan Brosur & Dokumen", id: "download", category: "Dokumentasi", desc: "Pusat download berkas PDF brosur, kalender akademik, dan berkas syarat pendaftaran." },
-    { title: "Video Profil & Lokasi Sekolah", id: "kontak", category: "Kontak", desc: "Video dokumenter institusi, nomor telepon, email, dan integrasi Google Maps." }
-  ];
+  const searchItems = siteContent.header.searchItems;
 
   const filteredSearch = searchItems.filter(item => {
     const query = searchQuery.toLowerCase().trim();
@@ -106,18 +93,26 @@ export default function Header({ activeSection }: HeaderProps) {
     };
   }, []);
 
-  const menuItems = [
-    { id: "hero", label: "Beranda", icon: Home },
-    { id: "sambutan", label: "Profil", icon: User },
-    { id: "program", label: "Akademik", icon: GraduationCap },
-    { id: "prestasi", label: "Prestasi", icon: Award },
-    { id: "inovasi", label: "Inovasi", icon: Lightbulb },
-    { id: "berita", label: "Berita", icon: Newspaper },
-    { id: "galeri", label: "Galeri", icon: ImageIcon },
-    { id: "spmb", label: "SPMB", icon: FileText },
-    { id: "download", label: "Download", icon: Download },
-    { id: "kontak", label: "Kontak", icon: MapPin },
-  ];
+  const menuItems = siteContent.header.menu.map((item) => {
+    const iconMap: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number }>> = {
+      hero: Home,
+      sambutan: User,
+      program: GraduationCap,
+      prestasi: Award,
+      inovasi: Lightbulb,
+      berita: Newspaper,
+      galeri: ImageIcon,
+      spmb: FileText,
+      download: Download,
+      kontak: MapPin,
+    };
+
+    return {
+      id: item.id,
+      label: item.label,
+      icon: iconMap[item.id] || Home,
+    };
+  });
 
   const handleScrollTo = (id: string) => {
     setIsMobileMenuOpen(false);
@@ -151,10 +146,10 @@ export default function Header({ activeSection }: HeaderProps) {
           <SchoolLogo size={46} className="transition-transform group-hover:scale-105 duration-300" />
           <div className="flex flex-col">
             <span className="font-heading font-extrabold text-white text-sm md:text-base leading-none tracking-tight group-hover:text-brand-sky transition-colors">
-              SDN 3 PURWOSARI
+              {siteContent.header.brandTitle}
             </span>
             <span className="text-[9px] uppercase tracking-[0.11em] font-bold text-slate-300 mt-1.5">
-              Kabupaten Wonogiri • Terakreditasi A
+              {siteContent.header.tagline}
             </span>
           </div>
         </div>
@@ -496,7 +491,7 @@ export default function Header({ activeSection }: HeaderProps) {
                 <Search size={20} className="text-brand-sky" />
                 <input
                   type="text"
-                  placeholder="Cari program, guru, fasilitas, ppdb..."
+                  placeholder={siteContent.header.searchPlaceholder}
                   className="w-full bg-transparent border-none outline-none text-slate-800 placeholder-slate-400 font-sans text-sm md:text-base font-medium py-1"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -597,7 +592,7 @@ export default function Header({ activeSection }: HeaderProps) {
               {/* Social Media Circular Buttons Grid */}
               <div className="grid grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <a
-                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent("Yuk kunjungi website resmi SDN 3 Purwosari Wonogiri untuk melihat pendaftarannya! " + window.location.href)}`}
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(siteContent.header.shareText + " " + window.location.href)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-col items-center gap-1.5 group select-none cursor-pointer"
@@ -621,7 +616,7 @@ export default function Header({ activeSection }: HeaderProps) {
                 </a>
 
                 <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent("Yuk kunjungi website resmi SDN 3 Purwosari Wonogiri!")}&url=${encodeURIComponent(window.location.href)}`}
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(siteContent.header.shareText)}&url=${encodeURIComponent(window.location.href)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-col items-center gap-1.5 group select-none cursor-pointer"
@@ -633,7 +628,7 @@ export default function Header({ activeSection }: HeaderProps) {
                 </a>
 
                 <a
-                  href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent("Website Resmi SDN 3 Purwosari Wonogiri")}`}
+                  href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(siteContent.header.shareTitle)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex flex-col items-center gap-1.5 group select-none cursor-pointer"
