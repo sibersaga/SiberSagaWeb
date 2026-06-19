@@ -13,18 +13,11 @@ export default function Topbar() {
         {/* Contact Info */}
         <div className="flex items-center gap-6">
           <a
-            href="mailto:sdn3purwosari@example.com"
+            href="mailto:sdn3purwosari@gmail.com"
             className="flex items-center gap-2 hover:text-amber-400 transition"
           >
             <Mail size={14} className="text-amber-400" />
             <span>sdn3purwosari@gmail.com</span>
-          </a>
-          <a
-            href="tel:+6282134567890"
-            className="flex items-center gap-2 hover:text-amber-400 transition"
-          >
-            <Phone size={14} className="text-amber-400" />
-            <span>+62 (0273) 321-456</span>
           </a>
         </div>
 

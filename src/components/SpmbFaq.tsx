@@ -20,8 +20,7 @@ import {
 } from "lucide-react";
 import { FAQItem, RegistrationData } from "../types";
 import { useAdmin } from "../context/AdminContext";
-import { db, isFirebaseConfigured } from "../firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { isSupabaseConfigured, insertRegistration } from "../supabase";
 
 export default function SpmbFaq() {
   const { faqs } = useAdmin();
@@ -87,16 +86,16 @@ export default function SpmbFaq() {
       pathway: formData.pathway
     };
 
-    if (isFirebaseConfigured && db) {
+    if (isSupabaseConfigured) {
       try {
-        await setDoc(doc(db, "registrations", regNo), submissionData);
+        const result = await insertRegistration(regNo, submissionData);
+        if (result.error) throw result.error;
         setSubmissionReceipt({
           regNo,
           submittedAt: submittedAtDate,
           data: { ...formData },
         });
         
-        // Reset fields
         setFormData({
           studentName: "",
           nik: "",
@@ -109,7 +108,7 @@ export default function SpmbFaq() {
           pathway: "Zonasi",
         });
       } catch (err: any) {
-        console.error("Error saving registration to Firestore:", err);
+        console.error("Error saving registration to Supabase:", err);
         alert("Gagal menyimpan ke cloud. Periksa koneksi internet Anda atau coba lagi.");
       } finally {
         setIsSubmitting(false);

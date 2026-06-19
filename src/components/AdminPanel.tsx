@@ -26,8 +26,7 @@ import {
   Code
 } from "lucide-react";
 import { Program, Achievement, AgendaEvent, NewsItem } from "../types";
-import { db, isFirebaseConfigured } from "../firebase";
-import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { deleteRegistration, isSupabaseConfigured, listRegistrations } from "../supabase";
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -91,14 +90,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     if (activeTab !== "registrations") return;
     
     setIsRegsLoading(true);
-    if (isFirebaseConfigured && db) {
-      getDocs(query(collection(db, "registrations"), orderBy("timestamp", "desc")))
-        .then((snapshot) => {
-          const list = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-          setRegistrations(list);
+    if (isSupabaseConfigured) {
+      listRegistrations()
+        .then((result) => {
+          if (result.error) throw result.error;
+          setRegistrations(result.data);
         })
         .catch((err) => {
-          console.error("Failed to fetch registrations from Firestore:", err);
+          console.error("Failed to fetch registrations from Supabase:", err);
         })
         .finally(() => {
           setIsRegsLoading(false);
@@ -119,12 +118,13 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
   const handleDeleteRegistration = async (regNo: string) => {
     if (confirm(`Apakah Anda yakin ingin menghapus data pendaftaran ${regNo}?`)) {
-      if (isFirebaseConfigured && db) {
+      if (isSupabaseConfigured) {
         try {
-          await deleteDoc(doc(db, "registrations", regNo));
-          setRegistrations(prev => prev.filter(r => r.regNo !== regNo));
+          const result = await deleteRegistration(regNo);
+          if (result.error) throw result.error;
+          setRegistrations(prev => prev.filter(r => r.id !== regNo && r.regNo !== regNo));
         } catch (e) {
-          console.error("Failed to delete registration from Firestore:", e);
+          console.error("Failed to delete registration from Supabase:", e);
           alert("Gagal menghapus data.");
         }
       } else {
@@ -1491,11 +1491,11 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     <button
                       onClick={() => {
                         setIsRegsLoading(true);
-                        if (isFirebaseConfigured && db) {
-                          getDocs(query(collection(db, "registrations"), orderBy("timestamp", "desc")))
-                            .then((snapshot) => {
-                              const list = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-                              setRegistrations(list);
+                        if (isSupabaseConfigured) {
+                          listRegistrations()
+                            .then((result) => {
+                              if (result.error) throw result.error;
+                              setRegistrations(result.data);
                             })
                             .catch(err => console.error(err))
                             .finally(() => setIsRegsLoading(false));
