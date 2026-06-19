@@ -543,7 +543,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         await loadCollection("faqs", setFaqsState, storageKeys.faqs, faqItems);
         await loadCollection("downloads", setDownloadsState, storageKeys.downloads, downloadFiles);
 
-        const loadExtra = async <T,>(key: string, fallback: T[], setter: (v: T[]) => void) => {
+        const loadExtra = async <T,>(key: string, fallback: T[], setter: React.Dispatch<React.SetStateAction<T[]>>) => {
           try {
             const result = await getSetting<{ data?: T[] }>(key);
             if (result.error) throw result.error;
@@ -556,10 +556,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           }
         };
 
-        await loadExtra(extraStorageKeys.teachers, defaultTeachers);
-        await loadExtra(extraStorageKeys.facilities, defaultFacilities);
-        await loadExtra(extraStorageKeys.testimonials, defaultTestimonials);
-        await loadExtra(extraStorageKeys.innovations, defaultInnovations);
+        await loadExtra(extraStorageKeys.teachers, defaultTeachers, setTeachersState);
+        await loadExtra(extraStorageKeys.facilities, defaultFacilities, setFacilitiesState);
+        await loadExtra(extraStorageKeys.testimonials, defaultTestimonials, setTestimonialsState);
+        await loadExtra(extraStorageKeys.innovations, defaultInnovations, setInnovationsState);
 
         const adminsResult = await listAdmins();
         if (adminsResult.error) throw adminsResult.error;
@@ -671,7 +671,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const syncExtra = (key: string, data: any[]) => {
     if (!isSupabaseConfigured) return;
     try {
-      upsertCollection(key, data);
+      upsertCollection(key as any, data);
     } catch (e) {
       console.error(`Error syncing ${key} to Supabase:`, e);
     }

@@ -502,69 +502,15 @@ export const defaultTeachers: Teacher[] = [
 ];
 
 export const defaultFacilities: Facility[] = [
-  {
-    name: "Ruang Kelas Pembelajaran",
-    qty: "6 Unit",
-    status: "Sangat Baik",
-    desc: "Dilengkapi proyektor multimedia, kipas angin, poster edukasi interaktif, serta sirkulasi udara alami yang melimpah.",
-    image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Perpustakaan Digital",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Koleksi ribuan buku fisik fiksi & referensi, lengkap dengan laptop pencarian OPAC digital siber.",
-    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Lab Komputer & Multimedia",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Ruang full-AC berspesifikasi tinggi untuk menunjang kelancaran ujian nasional (ANBK) serta literasi coding anak.",
-    image: "https://images.unsplash.com/photo-1562774053-455044249b61?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Ruang Kantor Kepala & Guru",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Pusat penyusunan modul Kurikulum Merdeka, administrasi guru, serta ruang konsultasi wali murid.",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Mushola Ash-Sholihin",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Sarana ibadah berjamaah, pendidikan karakter, shalat dhuha teratur, serta bimbingan tahfidz Quran.",
-    image: "https://images.unsplash.com/photo-1597935258735-e254c1839512?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Unit Kesehatan Sekolah (UKS)",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Pusat penanganan pertama murid sakit, dilengkapi ranjang medis, obat wajib, tinggi/berat badan, serta obat P3K.",
-    image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Halaman Bermain & Lapangan",
-    qty: "1 Area",
-    status: "Sangat Baik",
-    desc: "Halaman hijau ekologis yang luas, sirkulasi upacara bendera senin, senam bersama, serta kompetisi olahraga futsal.",
-    image: "https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Kantin Sehat Organik",
-    qty: "1 Unit",
-    status: "Sangat Baik",
-    desc: "Menyediakan asupan sehat bergizi higienis bebas pewarna buatan, mendukung kampanye bebas penimbunan plastik.",
-    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=600"
-  },
-  {
-    name: "Sanitasi Kamar Mandi Bersih",
-    qty: "4 Unit",
-    status: "Sangat Baik",
-    desc: "Terpisah rapi antara bilik laki-laki & perempuan, dilengkapi keran air mengalir deras bebas jentik nyamuk.",
-    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600"
-  }
+  { id: "fac-1", name: "Ruang Kelas Pembelajaran", qty: "6 Unit", status: "Sangat Baik", desc: "Dilengkapi proyektor multimedia, kipas angin, poster edukasi interaktif, serta sirkulasi udara alami yang melimpah.", image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-2", name: "Perpustakaan Digital", qty: "1 Unit", status: "Sangat Baik", desc: "Koleksi ribuan buku fisik fiksi & referensi, lengkap dengan laptop pencarian OPAC digital siber.", image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-3", name: "Lab Komputer & Multimedia", qty: "1 Unit", status: "Sangat Baik", desc: "Ruang full-AC berspesifikasi tinggi untuk menunjang kelancaran ujian nasional (ANBK) serta literasi coding anak.", image: "https://images.unsplash.com/photo-1562774053-455044249b61?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-4", name: "Ruang Kantor Kepala & Guru", qty: "1 Unit", status: "Sangat Baik", desc: "Pusat penyusunan modul Kurikulum Merdeka, administrasi guru, serta ruang konsultasi wali murid.", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-5", name: "Mushola Ash-Sholihin", qty: "1 Unit", status: "Sangat Baik", desc: "Sarana ibadah berjamaah, pendidikan karakter, shalat dhuha teratur, serta bimbingan tahfidz Quran.", image: "https://images.unsplash.com/photo-1597935258735-e254c1839512?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-6", name: "Unit Kesehatan Sekolah (UKS)", qty: "1 Unit", status: "Sangat Baik", desc: "Pusat penanganan pertama murid sakit, dilengkapi ranjang medis, obat wajib, tinggi/berat badan, serta obat P3K.", image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-7", name: "Halaman Bermain & Lapangan", qty: "1 Area", status: "Sangat Baik", desc: "Halaman hijau ekologis yang luas, sirkulasi upacara bendera senin, senam bersama, serta kompetisi olahraga futsal.", image: "https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-8", name: "Kantin Sehat Organik", qty: "1 Unit", status: "Sangat Baik", desc: "Menyediakan asupan sehat bergizi higienis bebas pewarna buatan, mendukung kampanye bebas penimbunan plastik.", image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=600" },
+  { id: "fac-9", name: "Sanitasi Kamar Mandi Bersih", qty: "4 Unit", status: "Sangat Baik", desc: "Terpisah rapi antara bilik laki-laki & perempuan, dilengkapi keran air mengalir deras bebas jentik nyamuk.", image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600" }
 ];
 
 export const defaultTestimonials: Testimonial[] = [

@@ -76,7 +76,6 @@ export default function Hero() {
                   <div className="relative w-full h-full min-h-[300px]">
                     <img
                       src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&q=80&w=1000"
-                      alt="SDN 3 Purwosari Wonogiri Gedung Sekolah"
                       alt={hero.imageAlt}
                       className="w-full h-full object-cover rounded-2xl"
                       referrerPolicy="no-referrer"

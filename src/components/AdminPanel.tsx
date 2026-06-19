@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import FullPageHtmlEditor from "./FullPageHtmlEditor";
 import { useAdmin } from "../context/AdminContext";
 import {
   Lock,
@@ -37,7 +36,6 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
-  const [showFullPageHtmlEditor, setShowFullPageHtmlEditor] = useState(false);
   const {
     programs,
     achievements,
@@ -524,11 +522,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   };
 
   return (
-    <>
-      {showFullPageHtmlEditor && (
-        <FullPageHtmlEditor onClose={() => setShowFullPageHtmlEditor(false)} />
-      )}
-      <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
       <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden border border-slate-100">
         
         {/* Header Ribbon */}
@@ -768,14 +762,6 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   <Code size={14} />
                   Editor HTML & JSON
                 </button>
-                {/* Full‑Page HTML Editor Button */}
-                <button
-                  onClick={() => setShowFullPageHtmlEditor(true)}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
-                >
-                  <Code size={14} />
-                  Full‑Page HTML Editor
-                </button>
               </nav>
 
               <div className="mt-auto p-3 border-t border-slate-800 hidden md:block">
@@ -791,6 +777,16 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
             {/* Main Action Working Canvas Workspace */}
             <div className="flex-1 bg-slate-50 p-4 md:p-6 overflow-y-auto flex flex-col gap-5">
+              
+              {/* 1. MANAGE ADMINS TAB */}
+              {activeTab === "admins" && (
+                <div className="max-w-2xl w-full mx-auto space-y-6">
+                  <div className="flex justify-between items-center bg-white p-4.5 rounded-2xl border border-slate-200">
+                    <div>
+                      <h4 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">Kelola Hak Akses Admin</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Atur email admin dan login manual untuk masuk ke panel kontrol.</p>
+                    </div>
+                  </div>
 
                   {/* Manual Login Settings */}
                   <div className="bg-white p-5 rounded-2xl border border-slate-150">
