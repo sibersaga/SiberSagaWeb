@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Program, Achievement, AgendaEvent, NewsItem, SchoolStat, GalleryPhoto, FAQItem, DownloadFile } from "../types";
+import { Program, Achievement, AgendaEvent, NewsItem, SchoolStat, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation } from "../types";
 import {
   schoolPrograms,
   schoolAchievements,
@@ -9,6 +9,10 @@ import {
   galleryPhotos,
   faqItems,
   downloadFiles,
+  defaultTeachers,
+  defaultFacilities,
+  defaultTestimonials,
+  defaultInnovations,
 } from "../data";
 import {
   getCollection,
@@ -49,6 +53,15 @@ interface AdminContextType {
   setSiteContent: (content: SiteContent) => Promise<{ success: boolean; error?: string }>;
   updateSiteContent: (content: SiteContent) => Promise<{ success: boolean; error?: string }>;
 
+  teachers: Teacher[];
+  setTeachers: (teachers: Teacher[]) => void;
+  facilities: Facility[];
+  setFacilities: (facilities: Facility[]) => void;
+  testimonials: Testimonial[];
+  setTestimonials: (items: Testimonial[]) => void;
+  innovations: Innovation[];
+  setInnovations: (items: Innovation[]) => void;
+
   setPrograms: (programs: Program[]) => void;
   setAchievements: (achievements: Achievement[]) => void;
   setAgendas: (agendas: AgendaEvent[]) => void;
@@ -73,6 +86,22 @@ interface AdminContextType {
   addNews: (newsItem: Omit<NewsItem, "id">) => void;
   updateNews: (id: string, newsItem: Partial<NewsItem>) => void;
   deleteNews: (id: string) => void;
+
+  addTeacher: (teacher: Omit<Teacher, "id">) => void;
+  updateTeacher: (id: string, teacher: Partial<Teacher>) => void;
+  deleteTeacher: (id: string) => void;
+
+  addFacility: (facility: Omit<Facility, "id">) => void;
+  updateFacility: (id: string, facility: Partial<Facility>) => void;
+  deleteFacility: (id: string) => void;
+
+  addTestimonial: (item: Omit<Testimonial, "id">) => void;
+  updateTestimonial: (id: string, item: Partial<Testimonial>) => void;
+  deleteTestimonial: (id: string) => void;
+
+  addInnovation: (item: Omit<Innovation, "id">) => void;
+  updateInnovation: (id: string, item: Partial<Innovation>) => void;
+  deleteInnovation: (id: string) => void;
 
   addAdmin: (email: string) => { success: boolean; error?: string };
   deleteAdmin: (email: string) => { success: boolean; error?: string };
@@ -383,6 +412,13 @@ const storageKeys: Record<CollectionName, string> = {
   downloads: "sdn3_downloads",
 };
 
+const extraStorageKeys = {
+  teachers: "sdn3_teachers",
+  facilities: "sdn3_facilities",
+  testimonials: "sdn3_testimonials",
+  innovations: "sdn3_innovations",
+};
+
 function readStorage<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
@@ -436,6 +472,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [manualLogin, setManualLogin] = useState<ManualLoginConfig | null>(() => readStorage<ManualLoginConfig | null>("sdn3_manual_admin_login", null));
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(() => readCurrentUser());
   const [isAdminMode, setIsAdminMode] = useState<boolean>(() => readStorage("sdn3_is_admin_mode", false));
+
+  const [teachers, setTeachersState] = useState<Teacher[]>(() => readStorage(extraStorageKeys.teachers, defaultTeachers));
+  const [facilities, setFacilitiesState] = useState<Facility[]>(() => readStorage(extraStorageKeys.facilities, defaultFacilities));
+  const [testimonials, setTestimonialsState] = useState<Testimonial[]>(() => readStorage(extraStorageKeys.testimonials, defaultTestimonials));
+  const [innovations, setInnovationsState] = useState<Innovation[]>(() => readStorage(extraStorageKeys.innovations, defaultInnovations));
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -501,6 +542,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         await loadCollection("gallery", setGalleryState, storageKeys.gallery, galleryPhotos);
         await loadCollection("faqs", setFaqsState, storageKeys.faqs, faqItems);
         await loadCollection("downloads", setDownloadsState, storageKeys.downloads, downloadFiles);
+
+        const loadExtra = async <T,>(key: string, fallback: T[], setter: (v: T[]) => void) => {
+          try {
+            const result = await getSetting<{ data?: T[] }>(key);
+            if (result.error) throw result.error;
+            const next = (result.data?.data && result.data.data.length > 0) ? result.data.data : fallback;
+            setter(next);
+            writeStorage(key, next);
+          } catch {
+            setter(fallback);
+            writeStorage(key, fallback);
+          }
+        };
+
+        await loadExtra(extraStorageKeys.teachers, defaultTeachers);
+        await loadExtra(extraStorageKeys.facilities, defaultFacilities);
+        await loadExtra(extraStorageKeys.testimonials, defaultTestimonials);
+        await loadExtra(extraStorageKeys.innovations, defaultInnovations);
 
         const adminsResult = await listAdmins();
         if (adminsResult.error) throw adminsResult.error;
@@ -607,6 +666,39 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setDownloadsState(data);
     writeStorage(storageKeys.downloads, data);
     syncCollectionToSupabase("downloads", data);
+  };
+
+  const syncExtra = (key: string, data: any[]) => {
+    if (!isSupabaseConfigured) return;
+    try {
+      upsertCollection(key, data);
+    } catch (e) {
+      console.error(`Error syncing ${key} to Supabase:`, e);
+    }
+  };
+
+  const setTeachers = (data: Teacher[]) => {
+    setTeachersState(data);
+    writeStorage(extraStorageKeys.teachers, data);
+    syncExtra("teachers", data as any);
+  };
+
+  const setFacilities = (data: Facility[]) => {
+    setFacilitiesState(data);
+    writeStorage(extraStorageKeys.facilities, data);
+    syncExtra("facilities", data as any);
+  };
+
+  const setTestimonials = (data: Testimonial[]) => {
+    setTestimonialsState(data);
+    writeStorage(extraStorageKeys.testimonials, data);
+    syncExtra("testimonials", data as any);
+  };
+
+  const setInnovations = (data: Innovation[]) => {
+    setInnovationsState(data);
+    writeStorage(extraStorageKeys.innovations, data);
+    syncExtra("innovations", data as any);
   };
 
   const updateCustomHTML = async (html: string) => {
@@ -886,6 +978,98 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addTeacher = (t: Omit<Teacher, "id">) => {
+    const nextId = "t_" + Date.now();
+    const next = { ...t, id: nextId };
+    const updated = [...teachers, next];
+    setTeachersState(updated);
+    writeStorage(extraStorageKeys.teachers, updated);
+    syncExtra("teachers", updated);
+  };
+
+  const updateTeacher = (id: string, updated: Partial<Teacher>) => {
+    const next = teachers.map((t) => (t.id === id ? { ...t, ...updated } : t));
+    setTeachersState(next);
+    writeStorage(extraStorageKeys.teachers, next);
+    syncExtra("teachers", next);
+  };
+
+  const deleteTeacher = (id: string) => {
+    const next = teachers.filter((t) => t.id !== id);
+    setTeachersState(next);
+    writeStorage(extraStorageKeys.teachers, next);
+    syncExtra("teachers", next);
+  };
+
+  const addFacility = (f: Omit<Facility, "id">) => {
+    const nextId = "fac-" + Date.now();
+    const next = { ...f, id: nextId };
+    const updated = [...facilities, next];
+    setFacilitiesState(updated);
+    writeStorage(extraStorageKeys.facilities, updated);
+    syncExtra("facilities", updated);
+  };
+
+  const updateFacility = (id: string, updated: Partial<Facility>) => {
+    const next = facilities.map((f) => (f.id === id ? { ...f, ...updated } : f));
+    setFacilitiesState(next);
+    writeStorage(extraStorageKeys.facilities, next);
+    syncExtra("facilities", next);
+  };
+
+  const deleteFacility = (id: string) => {
+    const next = facilities.filter((f) => f.id !== id);
+    setFacilitiesState(next);
+    writeStorage(extraStorageKeys.facilities, next);
+    syncExtra("facilities", next);
+  };
+
+  const addTestimonial = (t: Omit<Testimonial, "id">) => {
+    const nextId = "tes-" + Date.now();
+    const next = { ...t, id: nextId };
+    const updated = [...testimonials, next];
+    setTestimonialsState(updated);
+    writeStorage(extraStorageKeys.testimonials, updated);
+    syncExtra("testimonials", updated);
+  };
+
+  const updateTestimonial = (id: string, updated: Partial<Testimonial>) => {
+    const next = testimonials.map((t) => (t.id === id ? { ...t, ...updated } : t));
+    setTestimonialsState(next);
+    writeStorage(extraStorageKeys.testimonials, next);
+    syncExtra("testimonials", next);
+  };
+
+  const deleteTestimonial = (id: string) => {
+    const next = testimonials.filter((t) => t.id !== id);
+    setTestimonialsState(next);
+    writeStorage(extraStorageKeys.testimonials, next);
+    syncExtra("testimonials", next);
+  };
+
+  const addInnovation = (i: Omit<Innovation, "id">) => {
+    const nextId = "inno-" + Date.now();
+    const next = { ...i, id: nextId };
+    const updated = [...innovations, next];
+    setInnovationsState(updated);
+    writeStorage(extraStorageKeys.innovations, updated);
+    syncExtra("innovations", updated);
+  };
+
+  const updateInnovation = (id: string, updated: Partial<Innovation>) => {
+    const next = innovations.map((i) => (i.id === id ? { ...i, ...updated } : i));
+    setInnovationsState(next);
+    writeStorage(extraStorageKeys.innovations, next);
+    syncExtra("innovations", next);
+  };
+
+  const deleteInnovation = (id: string) => {
+    const next = innovations.filter((i) => i.id !== id);
+    setInnovationsState(next);
+    writeStorage(extraStorageKeys.innovations, next);
+    syncExtra("innovations", next);
+  };
+
   const updateNews = (id: string, updated: Partial<NewsItem>) => {
     const updatedNewsList = news.map((n) => (n.id === id ? { ...n, ...updated } : n));
     setNewsState(updatedNewsList);
@@ -935,6 +1119,14 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         updateCustomHTML,
         setSiteContent,
         updateSiteContent: setSiteContent,
+        teachers,
+        setTeachers,
+        facilities,
+        setFacilities,
+        testimonials,
+        setTestimonials,
+        innovations,
+        setInnovations,
         setPrograms,
         setAchievements,
         setAgendas,
@@ -954,6 +1146,18 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         addNews,
         updateNews,
         deleteNews,
+        addTeacher,
+        updateTeacher,
+        deleteTeacher,
+        addFacility,
+        updateFacility,
+        deleteFacility,
+        addTestimonial,
+        updateTestimonial,
+        deleteTestimonial,
+        addInnovation,
+        updateInnovation,
+        deleteInnovation,
         addAdmin,
         deleteAdmin,
         updateManualLogin,

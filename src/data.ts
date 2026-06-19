@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SchoolStat, Program, NewsItem, Achievement, AgendaEvent, GalleryPhoto, FAQItem, DownloadFile } from "./types";
+import { SchoolStat, Program, NewsItem, Achievement, AgendaEvent, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation } from "./types";
 
 export const schoolStats: SchoolStat[] = [
   {
@@ -424,4 +424,259 @@ export const downloadFiles: DownloadFile[] = [
     downloads: 175,
     url: "#",
   },
+];
+
+export const defaultTeachers: Teacher[] = [
+  {
+    id: "t1",
+    name: "Kiswanto, S.Pd., M.Pd.",
+    role: "Kepala Sekolah",
+    image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t2",
+    name: "Endang Lestari, S.Pd.",
+    role: "Guru Kelas 1",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t3",
+    name: "Sri Mulyani, S.Pd.",
+    role: "Guru Kelas 2",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t4",
+    name: "Bambang Wijaya, S.Pd.",
+    role: "Guru Kelas 3",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t5",
+    name: "Siti Aminah, S.Pd.SD",
+    role: "Guru Kelas 4",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t6",
+    name: "Heri Susanto, S.Pd.",
+    role: "Guru Kelas 5",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t7",
+    name: "Joko Wahyono, S.Pd.",
+    role: "Guru Kelas 6",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t8",
+    name: "Ahmad Fauzi, S.Pd.I",
+    role: "Guru Pendidikan Agama Islam",
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t9",
+    name: "Triyono, S.Pd.",
+    role: "Guru PJOK (Penjasorkes)",
+    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t10",
+    name: "Rina Astuti, S.Sn.",
+    role: "Guru Seni Budaya",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t11",
+    name: "Dwi Kartika, A.Ma.Pust.",
+    role: "Kepala Perpustakaan",
+    image: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=300",
+  },
+  {
+    id: "t12",
+    name: "Slamet Riyadi",
+    role: "Staff Administrasi & TU",
+    image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=300",
+  }
+];
+
+export const defaultFacilities: Facility[] = [
+  {
+    name: "Ruang Kelas Pembelajaran",
+    qty: "6 Unit",
+    status: "Sangat Baik",
+    desc: "Dilengkapi proyektor multimedia, kipas angin, poster edukasi interaktif, serta sirkulasi udara alami yang melimpah.",
+    image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Perpustakaan Digital",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Koleksi ribuan buku fisik fiksi & referensi, lengkap dengan laptop pencarian OPAC digital siber.",
+    image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Lab Komputer & Multimedia",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Ruang full-AC berspesifikasi tinggi untuk menunjang kelancaran ujian nasional (ANBK) serta literasi coding anak.",
+    image: "https://images.unsplash.com/photo-1562774053-455044249b61?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Ruang Kantor Kepala & Guru",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Pusat penyusunan modul Kurikulum Merdeka, administrasi guru, serta ruang konsultasi wali murid.",
+    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Mushola Ash-Sholihin",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Sarana ibadah berjamaah, pendidikan karakter, shalat dhuha teratur, serta bimbingan tahfidz Quran.",
+    image: "https://images.unsplash.com/photo-1597935258735-e254c1839512?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Unit Kesehatan Sekolah (UKS)",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Pusat penanganan pertama murid sakit, dilengkapi ranjang medis, obat wajib, tinggi/berat badan, serta obat P3K.",
+    image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Halaman Bermain & Lapangan",
+    qty: "1 Area",
+    status: "Sangat Baik",
+    desc: "Halaman hijau ekologis yang luas, sirkulasi upacara bendera senin, senam bersama, serta kompetisi olahraga futsal.",
+    image: "https://images.unsplash.com/photo-1576267423445-b2e0074d68a4?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Kantin Sehat Organik",
+    qty: "1 Unit",
+    status: "Sangat Baik",
+    desc: "Menyediakan asupan sehat bergizi higienis bebas pewarna buatan, mendukung kampanye bebas penimbunan plastik.",
+    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=600"
+  },
+  {
+    name: "Sanitasi Kamar Mandi Bersih",
+    qty: "4 Unit",
+    status: "Sangat Baik",
+    desc: "Terpisah rapi antara bilik laki-laki & perempuan, dilengkapi keran air mengalir deras bebas jentik nyamuk.",
+    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=600"
+  }
+];
+
+export const defaultTestimonials: Testimonial[] = [
+  {
+    id: "tes-1",
+    text: "Sangat bersyukur mempercayakan pendidikan putra-putri kami belajar di SDN 3 Purwosari. Pendekatan pembelajarannya menyenangkan, membimbing spiritual dengan program tahfidz Juz 30 dan shalat dhuha.",
+    name: "Sri Wahyuni",
+    role: "Wali Murid Kelas 3",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=150",
+  },
+  {
+    id: "tes-2",
+    text: "Ekstrakurikuler di SDN 3 Purwosari sangat variatif dan mendidik. Anak saya senang sekali ikut ekstra rebana, bakat seni dan ritme ketukannya tumbuh percaya diri tinggi.",
+    name: "Bambang Susanto",
+    role: "Wali Murid Kelas 5",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150",
+  },
+  {
+    id: "tes-3",
+    text: "Fasilitas penunjang laptop dan lab komputer sangat membantu anak-anak siap menghadapi masa depan digital secara sehat, bertanggung jawab, penuh kegembiraan.",
+    name: "Dewi Lestari",
+    role: "Wali Murid Kelas 6",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
+  },
+  {
+    id: "tes-4",
+    text: "Bimbingan kepramukaan yang solid menanamkan jiwa mandiri, disiplin, peduli lingkungan, serta empati sosial luhur pada anak harian sejalan Kurikulum Merdeka.",
+    name: "Heru Prasetyo",
+    role: "Wali Murid Kelas 4",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150",
+  },
+  {
+    id: "tes-5",
+    text: "Komitmen lingkungan nihil perundungan dan toleransi di SDN 3 Purwosari benar-benar nyata. Anak kami berangkat sekolah gembira, pulang dengan sopan santun mulia.",
+    name: "Siti Rahmawati",
+    role: "Wali Murid Kelas 2",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150",
+  },
+  {
+    id: "tes-6",
+    text: "Koordinasi guru lintas kelas dengan wali murid lewat paguyuban sangat interaktif dan responsif, meringankan kekhawatiran orang tua terkait perkembangan akademik anak.",
+    name: "Agus Salim",
+    role: "Wali Murid Kelas 1",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150",
+  },
+];
+
+export const defaultInnovations: Innovation[] = [
+  {
+    id: "digital",
+    title: "e-Learning & Smart Class",
+    badge: "Inovasi Pembelajaran",
+    tagline: "Sistem Manajemen Belajar & Kelas Berbasis Proyektor Interaktif",
+    description: "Transformasi kegiatan belajar mengajar (KBM) konvensional ke berbasis media teknologi. Setiap tingkat kelas dilengkapi koneksi internet kecepatan tinggi, proyektor multimedial, dan platform interaktif belajar mandiri.",
+    colorTheme: "indigo",
+    iconName: "Cpu",
+    stats: [
+      { label: "Kelas Cerdas", value: "100%", sub: "Terpasang Smart Projector", iconName: "Cpu" },
+      { label: "Materi Digital", value: "320+", sub: "Modul & Animasi Interaktif", iconName: "Globe" },
+      { label: "Guru Cakap IT", value: "100%", sub: "Telah Tersertifikasi Digital", iconName: "Award" },
+      { label: "Efisiensi KBM", value: "+45%", sub: "Keterpaduan Pemahaman Siswa", iconName: "TrendingUp" }
+    ],
+    steps: [
+      { title: "Pembelajaran Interaktif", desc: "Guru menyajikan konsep abstrak sains/matematika dengan animasi 3D interaktif." },
+      { title: "Evaluasi Game-Based", desc: "Kuis harian menyenangkan menggunakan media e-learning untuk melatih daya tangkas." },
+      { title: "Portofolio Online", desc: "Hasil karya anak didik terabadikan secara aman dalam arsip digital cloud sekolah." }
+    ],
+    impactTitle: "Dampak Akademis Nyata",
+    impactDesc: "92% siswa melaporkan lebih menyukai model KBM berbasis smart class, mengurangi tingkat ketidakhadiran secara signifikan di seluruh jenjang rombel."
+  },
+  {
+    id: "adiwiyata",
+    title: "Adiwiyata Saku / Bank Sampah",
+    badge: "Karakter Peduli Lingkungan",
+    tagline: "Aplikasi Pencatatan & Tabungan Sampah Plastik Murid",
+    description: "Program sadar lingkungan di mana seluruh siswa diajarkan memilah sampah harian. Sampah organik dijadikan kompos taman sekolah, dan sampah anorganik ditimbang dan dicatat sebagai tabungan poin lingkungan.",
+    colorTheme: "emerald",
+    iconName: "Recycle",
+    stats: [
+      { label: "Sampah Terkelola", value: "850 kg", sub: "Plastik Berhasil Didaur Ulang", iconName: "Recycle" },
+      { label: "Partisipasi Siswa", value: "98%", sub: "Siswa Aktif Menabung Sampah", iconName: "Users" },
+      { label: "Taman Hidup", value: "6 Zona", sub: "Kawasan Kehati & Tanaman Obat", iconName: "Leaf" },
+      { label: "Ekskul Hijau", value: "2 Kali", sub: "Pembinaan Rutin per Pekan", iconName: "Sparkles" }
+    ],
+    steps: [
+      { title: "Pilah & Setor harian", desc: "Murid menyisihkan sampah plastik minumannya untuk ditimbang setiap pagi hari." },
+      { title: "Konversi Buku Tabungan", desc: "Sampah dikonversi menjadi poin yang bisa ditukar dengan alat tulis atau buku fiksi." },
+      { title: "Produksi Pupuk Kompos", desc: "Sampah daun diproduksi langsung oleh siswa bersama kader Adiwiyata untuk kebun." }
+    ],
+    impactTitle: "Keasrian & Kepedulian Lestari",
+    impactDesc: "Menciptakan lingkungan belajar yang sangat asri, sejuk, minim limbah plastik sekali pakai, serta mengantarkan SDN 3 Purwosari meraih Adiwiyata Tingkat Kabupaten."
+  },
+  {
+    id: "literasi",
+    title: "Perpustakaan Pojok Digital",
+    badge: "Inovasi Literasi",
+    tagline: "Akses E-Book Gratis & Koleksi Buku Fisik Kreatif Kelas",
+    description: "Meningkatkan kegemaran membaca (reading culture) melalui penyediaan tablet baca khusus anak dan rak kreasi buku di sudut baris setiap ruang kelas. Akses luas ke ratusan dongeng nusantara dan ensiklopedia interaktif.",
+    colorTheme: "amber",
+    iconName: "BookOpen",
+    stats: [
+      { label: "Koleksi E-Book", value: "450+", sub: "Buku Bacaan Ramah Anak", iconName: "BookOpen" },
+      { label: "Pojok Baca", value: "6 Spot", sub: "Nyaman di Seluruh Ruang Kelas", iconName: "Sparkles" },
+      { label: "Rata-rata Baca", value: "3 Buku", sub: "Selesai diulas Siswa per Bulan", iconName: "CheckCircle2" },
+      { label: "Indeks Literasi", value: "Tinggi", sub: "Standar Kemendikbudristek", iconName: "Zap" }
+    ],
+    steps: [
+      { title: "15 Menit Membaca", desc: "Kebiasaan membaca buku non-akademis bersama guru kelas sebelum gerbang pelajaran utama dimulai." },
+      { title: "Ulasan Kreatif (Review)", desc: "Siswa menempelkan resume gambar cerita mading di dinding apresiasi pojok kreatif lokal." },
+      { title: "Rewards Duta Baca", desc: "Pemilihan secara berkala duta literasi berhadiah pin penghargaan kepemimpinan cilik." }
+    ],
+    impactTitle: "Pondasi Penalaran Kritis",
+    impactDesc: "Mendorong nilai kompetensi asesmen nasional literasi SDN 3 Purwosari melampaui rata-rata nasional, melahirkan generasi haus ilmu yang kritis dan ekspresif."
+  }
 ];

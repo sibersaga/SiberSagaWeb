@@ -86,3 +86,41 @@ export interface RegistrationData {
   address: string;
   pathway: string;
 }
+
+export interface Teacher {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+}
+
+export interface Facility {
+  id: string;
+  name: string;
+  qty: string;
+  status: string;
+  desc: string;
+  image: string;
+}
+
+export interface Testimonial {
+  id: string;
+  text: string;
+  name: string;
+  role: string;
+  image: string;
+}
+
+export interface Innovation {
+  id: string;
+  title: string;
+  badge: string;
+  tagline: string;
+  description: string;
+  colorTheme: string;
+  iconName: string;
+  stats: Array<{ label: string; value: string; sub: string; iconName: string }>;
+  steps: Array<{ title: string; desc: string }>;
+  impactTitle: string;
+  impactDesc: string;
+}

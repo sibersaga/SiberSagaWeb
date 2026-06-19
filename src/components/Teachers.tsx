@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { UserPlus, Trash2, Edit2, Settings, Check, X, ShieldAlert, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { useAdmin } from "../context/AdminContext";
 
 interface Teacher {
   id: string;
@@ -13,111 +14,14 @@ interface Teacher {
   image: string;
 }
 
-const DEFAULT_TEACHERS: Teacher[] = [
-  {
-    id: "t1",
-    name: "Kiswanto, S.Pd., M.Pd.",
-    role: "Kepala Sekolah",
-    image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t2",
-    name: "Endang Lestari, S.Pd.",
-    role: "Guru Kelas 1",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t3",
-    name: "Sri Mulyani, S.Pd.",
-    role: "Guru Kelas 2",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t4",
-    name: "Bambang Wijaya, S.Pd.",
-    role: "Guru Kelas 3",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t5",
-    name: "Siti Aminah, S.Pd.SD",
-    role: "Guru Kelas 4",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t6",
-    name: "Heri Susanto, S.Pd.",
-    role: "Guru Kelas 5",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t7",
-    name: "Joko Wahyono, S.Pd.",
-    role: "Guru Kelas 6",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t8",
-    name: "Ahmad Fauzi, S.Pd.I",
-    role: "Guru Pendidikan Agama Islam",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t9",
-    name: "Triyono, S.Pd.",
-    role: "Guru PJOK (Penjasorkes)",
-    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t10",
-    name: "Rina Astuti, S.Sn.",
-    role: "Guru Seni Budaya",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t11",
-    name: "Dwi Kartika, A.Ma.Pust.",
-    role: "Kepala Perpustakaan",
-    image: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=300",
-  },
-  {
-    id: "t12",
-    name: "Slamet Riyadi",
-    role: "Staff Administrasi & TU",
-    image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=300",
-  }
-];
-
 export default function Teachers() {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [isAdminMode, setIsAdminMode] = useState(false);
+  const { teachers, setTeachers, isAdminMode } = useAdmin();
   const [activeTab, setActiveTab] = useState<"card" | "grid">("card");
 
-  // Admin form state
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
   const [formImage, setFormImage] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  // Initialize from LocalStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("sdn3_teachers");
-    if (stored) {
-      try {
-        setTeachers(JSON.parse(stored));
-      } catch (e) {
-        setTeachers(DEFAULT_TEACHERS);
-      }
-    } else {
-      setTeachers(DEFAULT_TEACHERS);
-      localStorage.setItem("sdn3_teachers", JSON.stringify(DEFAULT_TEACHERS));
-    }
-  }, []);
-
-  const saveTeachers = (newTeachers: Teacher[]) => {
-    setTeachers(newTeachers);
-    localStorage.setItem("sdn3_teachers", JSON.stringify(newTeachers));
-  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +33,7 @@ export default function Teachers() {
       const updated = teachers.map((t) =>
         t.id === editingId ? { ...t, name: formName, role: formRole, image: imgUrl } : t
       );
-      saveTeachers(updated);
+      setTeachers(updated);
       setEditingId(null);
     } else {
       const newTeacher: Teacher = {
@@ -138,7 +42,7 @@ export default function Teachers() {
         role: formRole,
         image: imgUrl,
       };
-      saveTeachers([...teachers, newTeacher]);
+      setTeachers([...teachers, newTeacher]);
     }
 
     setFormName("");
@@ -151,14 +55,12 @@ export default function Teachers() {
     setFormName(teacher.name);
     setFormRole(teacher.role);
     setFormImage(teacher.image);
-    // Scroll to form smoothly
     document.getElementById("admin-form")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const handleDelete = (id: string) => {
     if (confirm("Apakah Anda yakin ingin menghapus data guru ini?")) {
-      const filtered = teachers.filter((t) => t.id !== id);
-      saveTeachers(filtered);
+      setTeachers(teachers.filter((t) => t.id !== id));
       if (editingId === id) {
         setEditingId(null);
         setFormName("");
@@ -170,7 +72,20 @@ export default function Teachers() {
 
   const handleReset = () => {
     if (confirm("Reset seluruh data guru kembali ke bawaan sistem (12 orang)?")) {
-      saveTeachers(DEFAULT_TEACHERS);
+      setTeachers([
+        { id: "t1", name: "Kiswanto, S.Pd., M.Pd.", role: "Kepala Sekolah", image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=300" },
+        { id: "t2", name: "Endang Lestari, S.Pd.", role: "Guru Kelas 1", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300" },
+        { id: "t3", name: "Sri Mulyani, S.Pd.", role: "Guru Kelas 2", image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300" },
+        { id: "t4", name: "Bambang Wijaya, S.Pd.", role: "Guru Kelas 3", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300" },
+        { id: "t5", name: "Siti Aminah, S.Pd.SD", role: "Guru Kelas 4", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" },
+        { id: "t6", name: "Heri Susanto, S.Pd.", role: "Guru Kelas 5", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300" },
+        { id: "t7", name: "Joko Wahyono, S.Pd.", role: "Guru Kelas 6", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300" },
+        { id: "t8", name: "Ahmad Fauzi, S.Pd.I", role: "Guru Pendidikan Agama Islam", image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300" },
+        { id: "t9", name: "Triyono, S.Pd.", role: "Guru PJOK (Penjasorkes)", image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=300" },
+        { id: "t10", name: "Rina Astuti, S.Sn.", role: "Guru Seni Budaya", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=300" },
+        { id: "t11", name: "Dwi Kartika, A.Ma.Pust.", role: "Kepala Perpustakaan", image: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=300" },
+        { id: "t12", name: "Slamet Riyadi", role: "Staff Administrasi & TU", image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&q=80&w=300" }
+      ]);
       setEditingId(null);
       setFormName("");
       setFormRole("");
@@ -221,7 +136,7 @@ export default function Teachers() {
           </div>
 
           <button
-            onClick={() => setIsAdminMode(!isAdminMode)}
+            onClick={() => {}}
             className={`flex items-center gap-1 px-4 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
               isAdminMode
                 ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
