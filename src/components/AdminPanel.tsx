@@ -25,7 +25,12 @@ import {
   Check,
   AlertCircle,
   FolderOpen,
-  Code
+  Code,
+  BookOpen,
+  Eye,
+  Target,
+  Flag,
+  Quote
 } from "lucide-react";
 import { Program, Achievement, AgendaEvent, NewsItem } from "../types";
 import { deleteRegistration, isSupabaseConfigured, listRegistrations } from "../supabase";
@@ -77,6 +82,16 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     setAgendas,
     setNews,
     setAdmins,
+    siteContent,
+    updateSiteContent,
+    teachers,
+    setTeachers,
+    facilities,
+    setFacilities,
+    testimonials,
+    setTestimonials,
+    innovations,
+    setInnovations,
   } = useAdmin();
 
   // Login Form state
@@ -87,7 +102,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [loginError, setLoginError] = useState("");
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<"admins" | "programs" | "achievements" | "agendas" | "news" | "registrations" | "dev">("admins");
+  const [activeTab, setActiveTab] = useState<"admins" | "welcome" | "programs" | "achievements" | "agendas" | "news" | "registrations" | "dev">("admins");
 
   // Registration list state
   const [registrations, setRegistrations] = useState<any[]>([]);
@@ -148,18 +163,122 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   };
 
   // Developer Modes (HTML / JSON Editor State)
+  type JsonCollection = "all" | "siteContent" | "customHTML" | "programs" | "achievements" | "agendas" | "news" | "admins" | "stats" | "gallery" | "faqs" | "downloads" | "teachers" | "facilities" | "testimonials" | "innovations";
   const [devSubTab, setDevSubTab] = useState<"html" | "json">("json");
-  const [selectedJsonCollection, setSelectedJsonCollection] = useState<"programs" | "achievements" | "agendas" | "news" | "admins" | "stats" | "gallery" | "faqs" | "downloads">("programs");
+  const [selectedJsonCollection, setSelectedJsonCollection] = useState<JsonCollection>("all");
   const [textareaJsonValue, setTextareaJsonValue] = useState("");
   const [jsonError, setJsonError] = useState("");
   const [jsonSuccess, setJsonSuccess] = useState(false);
   const [htmlValue, setHtmlValue] = useState(customHTML);
   const [htmlSuccess, setHtmlSuccess] = useState(false);
+  const [htmlMode, setHtmlMode] = useState<"custom" | "full">("full");
+
+  const buildAllJsonPayload = () => ({
+    siteContent,
+    customHTML,
+    admins,
+    stats,
+    programs,
+    achievements,
+    agendas,
+    news,
+    teachers,
+    facilities,
+    gallery,
+    faqs,
+    downloads,
+    testimonials,
+    innovations,
+  });
+
+  const buildFullHtmlSnapshot = () => {
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    const listItems = (items: string[]) => items.map((item) => `        <li>${escapeHtml(item)}</li>`).join("\n");
+    const cards = (items: Array<{ title: string; desc?: string; description?: string }>) =>
+      items.map((item) => [
+        "        <article>",
+        `          <h3>${escapeHtml(item.title)}</h3>`,
+        `          <p>${escapeHtml(item.desc || item.description || "")}</p>`,
+        "        </article>",
+      ].join("\n")).join("\n");
+
+    const w = siteContent.welcome;
+    return [
+      "<!doctype html>",
+      "<html lang=\"id\">",
+      "<head>",
+      "  <meta charset=\"utf-8\" />",
+      "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />",
+      `  <title>${escapeHtml(siteContent.header.brandTitle)}</title>`,
+      "</head>",
+      "<body>",
+      "  <header>",
+      `    <h1>${escapeHtml(siteContent.header.brandTitle)}</h1>`,
+      `    <p>${escapeHtml(siteContent.header.tagline)}</p>`,
+      "    <nav>",
+      "      <ul>",
+      ...siteContent.header.menu.map((item) => `        <li><a href="#${escapeHtml(item.id)}">${escapeHtml(item.label)}</a></li>`),
+      "      </ul>",
+      "    </nav>",
+      "  </header>",
+      "  <main>",
+      "    <section id=\"hero\">",
+      `      <p>${escapeHtml(siteContent.hero.badge)}</p>`,
+      `      <h2>${escapeHtml(siteContent.hero.titlePrimary)} ${escapeHtml(siteContent.hero.titleSecondary)}</h2>`,
+      `      <p>${escapeHtml(siteContent.hero.description)}</p>`,
+      "    </section>",
+      "    <section id=\"sambutan\">",
+      `      <h2>${escapeHtml(w.title)}</h2>`,
+      `      <p>${escapeHtml(w.description)}</p>`,
+      `      <h3>${escapeHtml(w.tabs.sambutan.label)}</h3>`,
+      `      <blockquote>${escapeHtml(w.tabs.sambutan.quote)}</blockquote>`,
+      ...w.tabs.sambutan.paragraphs.map((item) => `      <p>${escapeHtml(item)}</p>`),
+      `      <p><strong>${escapeHtml(w.tabs.sambutan.closing)}</strong></p>`,
+      `      <h3>${escapeHtml(w.tabs.visi.label)}</h3>`,
+      `      <p>${escapeHtml(w.tabs.visi.title)}</p>`,
+      `      <p>${escapeHtml(w.tabs.visi.description)}</p>`,
+      cards(w.tabs.visi.highlights),
+      `      <h3>${escapeHtml(w.tabs.misi.label)}</h3>`,
+      "      <ol>",
+      listItems(w.tabs.misi.items),
+      "      </ol>",
+      `      <h3>${escapeHtml(w.tabs.tujuan.label)}</h3>`,
+      cards(w.tabs.tujuan.goals),
+      "    </section>",
+      "    <section id=\"program\">",
+      "      <h2>Program</h2>",
+      cards(programs),
+      "    </section>",
+      "    <section id=\"prestasi\">",
+      "      <h2>Prestasi</h2>",
+      ...achievements.map((item) => `      <article><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.rank)} - ${escapeHtml(item.level)} (${escapeHtml(item.year)})</p></article>`),
+      "    </section>",
+      "    <section id=\"berita\">",
+      "      <h2>Berita</h2>",
+      ...news.map((item) => `      <article><h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.excerpt)}</p></article>`),
+      "    </section>",
+      "  </main>",
+      "  <footer>",
+      `    <p>${escapeHtml(siteContent.footer.address)}</p>`,
+      `    <p>${escapeHtml(siteContent.footer.copyright)}</p>`,
+      "  </footer>",
+      "</body>",
+      "</html>",
+    ].join("\n");
+  };
 
   // Sync JSON Textarea with selected collection
   useEffect(() => {
-    let rawData: any = [];
-    if (selectedJsonCollection === "programs") rawData = programs;
+    let rawData: any = buildAllJsonPayload();
+    if (selectedJsonCollection === "all") rawData = buildAllJsonPayload();
+    else if (selectedJsonCollection === "siteContent") rawData = siteContent;
+    else if (selectedJsonCollection === "customHTML") rawData = customHTML;
+    else if (selectedJsonCollection === "programs") rawData = programs;
     else if (selectedJsonCollection === "achievements") rawData = achievements;
     else if (selectedJsonCollection === "agendas") rawData = agendas;
     else if (selectedJsonCollection === "news") rawData = news;
@@ -168,20 +287,77 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     else if (selectedJsonCollection === "gallery") rawData = gallery;
     else if (selectedJsonCollection === "faqs") rawData = faqs;
     else if (selectedJsonCollection === "downloads") rawData = downloads;
+    else if (selectedJsonCollection === "teachers") rawData = teachers;
+    else if (selectedJsonCollection === "facilities") rawData = facilities;
+    else if (selectedJsonCollection === "testimonials") rawData = testimonials;
+    else if (selectedJsonCollection === "innovations") rawData = innovations;
     
     setTextareaJsonValue(JSON.stringify(rawData, null, 2));
     setJsonError("");
     setJsonSuccess(false);
-  }, [selectedJsonCollection, programs, achievements, agendas, news, admins, stats, gallery, faqs, downloads]);
+  }, [selectedJsonCollection, siteContent, customHTML, programs, achievements, agendas, news, admins, stats, gallery, faqs, downloads, teachers, facilities, testimonials, innovations]);
 
   // Sync HTML input state when customHTML changes
   useEffect(() => {
-    setHtmlValue(customHTML);
-  }, [customHTML]);
+    setHtmlValue(htmlMode === "full" ? buildFullHtmlSnapshot() : customHTML);
+  }, [customHTML, htmlMode, siteContent, programs, achievements, news]);
 
   // General Form States
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isEditingWelcome, setIsEditingWelcome] = useState(false);
+  const [welcomeEditStatus, setWelcomeEditStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+  const buildWelcomeForm = () => ({
+    eyebrow: siteContent.welcome.eyebrow || "",
+    title: siteContent.welcome.title || "",
+    description: siteContent.welcome.description || "",
+    sambutan: {
+      label: siteContent.welcome.tabs.sambutan.label || "",
+      badge: siteContent.welcome.tabs.sambutan.badge || "",
+      title: siteContent.welcome.tabs.sambutan.title || "",
+      quote: siteContent.welcome.tabs.sambutan.quote || "",
+      paragraphs: [...(siteContent.welcome.tabs.sambutan.paragraphs || ["", "", "", ""])],
+      closing: siteContent.welcome.tabs.sambutan.closing || ""
+    },
+    visi: {
+      label: siteContent.welcome.tabs.visi.label || "",
+      badge: siteContent.welcome.tabs.visi.badge || "",
+      title: siteContent.welcome.tabs.visi.title || "",
+      intro: siteContent.welcome.tabs.visi.intro || "",
+      description: siteContent.welcome.tabs.visi.description || "",
+      highlights: [...(siteContent.welcome.tabs.visi.highlights || [{ title: "", desc: "" }])]
+    },
+    misi: {
+      label: siteContent.welcome.tabs.misi.label || "",
+      badge: siteContent.welcome.tabs.misi.badge || "",
+      title: siteContent.welcome.tabs.misi.title || "",
+      intro: siteContent.welcome.tabs.misi.intro || "",
+      items: [...(siteContent.welcome.tabs.misi.items || ["", "", ""])],
+      panelTitle: siteContent.welcome.tabs.misi.panelTitle || "",
+      panelDescription: siteContent.welcome.tabs.misi.panelDescription || "",
+      footerLeft: siteContent.welcome.tabs.misi.footerLeft || "",
+      footerRight: siteContent.welcome.tabs.misi.footerRight || ""
+    },
+    tujuan: {
+      label: siteContent.welcome.tabs.tujuan.label || "",
+      badge: siteContent.welcome.tabs.tujuan.badge || "",
+      title: siteContent.welcome.tabs.tujuan.title || "",
+      intro: siteContent.welcome.tabs.tujuan.intro || "",
+      sideTitle: siteContent.welcome.tabs.tujuan.sideTitle || "",
+      sideDescription: siteContent.welcome.tabs.tujuan.sideDescription || "",
+      goals: [...(siteContent.welcome.tabs.tujuan.goals || [{ title: "", desc: "" }])]
+    }
+  });
+
+  // Welcome form state
+  const [welcomeForm, setWelcomeForm] = useState(buildWelcomeForm);
+
+  useEffect(() => {
+    if (!isEditingWelcome) {
+      setWelcomeForm(buildWelcomeForm());
+    }
+  }, [siteContent, isEditingWelcome]);
 
   // New admin state
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -233,18 +409,59 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     author: ""
   });
 
-  const handleSaveJson = () => {
+  const handleSaveJson = async () => {
     setJsonError("");
     setJsonSuccess(false);
     try {
       const parsedData = JSON.parse(textareaJsonValue);
-      if (!Array.isArray(parsedData)) {
+
+      if (selectedJsonCollection === "all") {
+        if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
+          setJsonError("Format Seluruh Website harus berupa Object JSON.");
+          return;
+        }
+
+        if (parsedData.siteContent) {
+          const result = await updateSiteContent(parsedData.siteContent);
+          if (!result.success) {
+            setJsonError(result.error || "Gagal menyimpan siteContent.");
+            return;
+          }
+        }
+        if (typeof parsedData.customHTML === "string") updateCustomHTML(parsedData.customHTML);
+        if (Array.isArray(parsedData.programs)) setPrograms(parsedData.programs);
+        if (Array.isArray(parsedData.achievements)) setAchievements(parsedData.achievements);
+        if (Array.isArray(parsedData.agendas)) setAgendas(parsedData.agendas);
+        if (Array.isArray(parsedData.news)) setNews(parsedData.news);
+        if (Array.isArray(parsedData.admins)) setAdmins(parsedData.admins);
+        if (Array.isArray(parsedData.stats)) setStats(parsedData.stats);
+        if (Array.isArray(parsedData.gallery)) setGallery(parsedData.gallery);
+        if (Array.isArray(parsedData.faqs)) setFaqs(parsedData.faqs);
+        if (Array.isArray(parsedData.downloads)) setDownloads(parsedData.downloads);
+        if (Array.isArray(parsedData.teachers)) setTeachers(parsedData.teachers);
+        if (Array.isArray(parsedData.facilities)) setFacilities(parsedData.facilities);
+        if (Array.isArray(parsedData.testimonials)) setTestimonials(parsedData.testimonials);
+        if (Array.isArray(parsedData.innovations)) setInnovations(parsedData.innovations);
+      } else if (selectedJsonCollection === "siteContent") {
+        if (!parsedData || typeof parsedData !== "object" || Array.isArray(parsedData)) {
+          setJsonError("Format siteContent harus berupa Object JSON.");
+          return;
+        }
+        const result = await updateSiteContent(parsedData);
+        if (!result.success) {
+          setJsonError(result.error || "Gagal menyimpan siteContent.");
+          return;
+        }
+      } else if (selectedJsonCollection === "customHTML") {
+        if (typeof parsedData !== "string") {
+          setJsonError("Format customHTML harus berupa string JSON.");
+          return;
+        }
+        updateCustomHTML(parsedData);
+      } else if (!Array.isArray(parsedData)) {
         setJsonError("Format data harus berupa Array JSON.");
         return;
-      }
-
-      // Basic validating schema and matching targets
-      if (selectedJsonCollection === "programs") {
+      } else if (selectedJsonCollection === "programs") {
         setPrograms(parsedData);
       } else if (selectedJsonCollection === "achievements") {
         setAchievements(parsedData);
@@ -266,6 +483,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
         setFaqs(parsedData);
       } else if (selectedJsonCollection === "downloads") {
         setDownloads(parsedData);
+      } else if (selectedJsonCollection === "teachers") {
+        setTeachers(parsedData);
+      } else if (selectedJsonCollection === "facilities") {
+        setFacilities(parsedData);
+      } else if (selectedJsonCollection === "testimonials") {
+        setTestimonials(parsedData);
+      } else if (selectedJsonCollection === "innovations") {
+        setInnovations(parsedData);
       }
 
       setJsonSuccess(true);
@@ -337,6 +562,80 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     } else {
       setManualLoginStatus({ success: false, message: res.error || "Gagal menyimpan login manual." });
     }
+  };
+
+  const handleWelcomeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWelcomeEditStatus(null);
+
+    const nextContent = {
+      ...siteContent,
+      welcome: {
+        ...siteContent.welcome,
+        eyebrow: welcomeForm.eyebrow.trim(),
+        title: welcomeForm.title.trim(),
+        description: welcomeForm.description.trim(),
+        tabs: {
+          ...siteContent.welcome.tabs,
+          sambutan: {
+            ...siteContent.welcome.tabs.sambutan,
+            ...welcomeForm.sambutan,
+            paragraphs: welcomeForm.sambutan.paragraphs.map((item) => item.trim()).filter(Boolean),
+          },
+          visi: {
+            ...siteContent.welcome.tabs.visi,
+            ...welcomeForm.visi,
+            highlights: welcomeForm.visi.highlights
+              .map((item) => ({ title: item.title.trim(), desc: item.desc.trim() }))
+              .filter((item) => item.title || item.desc),
+          },
+          misi: {
+            ...siteContent.welcome.tabs.misi,
+            ...welcomeForm.misi,
+            items: welcomeForm.misi.items.map((item) => item.trim()).filter(Boolean),
+          },
+          tujuan: {
+            ...siteContent.welcome.tabs.tujuan,
+            ...welcomeForm.tujuan,
+            goals: welcomeForm.tujuan.goals
+              .map((item) => ({ title: item.title.trim(), desc: item.desc.trim() }))
+              .filter((item) => item.title || item.desc),
+          },
+        },
+      },
+    };
+
+    const result = await updateSiteContent(nextContent);
+    if (result.success) {
+      setIsEditingWelcome(false);
+      setWelcomeEditStatus({ success: true, message: "Konten profil sekolah berhasil disimpan." });
+    } else {
+      setWelcomeEditStatus({ success: false, message: result.error || "Gagal menyimpan konten profil." });
+    }
+  };
+
+  const updateWelcomeParagraph = (index: number, value: string) => {
+    const paragraphs = [...welcomeForm.sambutan.paragraphs];
+    paragraphs[index] = value;
+    setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, paragraphs } });
+  };
+
+  const updateMisiItem = (index: number, value: string) => {
+    const items = [...welcomeForm.misi.items];
+    items[index] = value;
+    setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, items } });
+  };
+
+  const updateVisiHighlight = (index: number, key: "title" | "desc", value: string) => {
+    const highlights = [...welcomeForm.visi.highlights];
+    highlights[index] = { ...highlights[index], [key]: value };
+    setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, highlights } });
+  };
+
+  const updateTujuanGoal = (index: number, key: "title" | "desc", value: string) => {
+    const goals = [...welcomeForm.tujuan.goals];
+    goals[index] = { ...goals[index], [key]: value };
+    setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, goals } });
   };
 
   // Program Handlers
@@ -522,18 +821,18 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden border border-slate-100">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/90 backdrop-blur-sm">
+      <div className="bg-slate-50 w-screen h-screen flex flex-col overflow-hidden">
         
         {/* Header Ribbon */}
-        <div className="bg-slate-900 px-6 py-4.5 flex items-center justify-between text-white shrink-0">
+        <div className="bg-slate-950 px-5 md:px-8 py-4 flex items-center justify-between text-white shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-xl text-white">
               <Shield size={20} />
             </div>
             <div>
-              <h3 className="font-heading font-extrabold text-sm md:text-base tracking-wide">
-                Pusat Kontrol Administratif Portal SDN 3
+              <h3 className="font-heading font-extrabold text-sm md:text-lg tracking-wide">
+                Admin Workspace SDN 3 Purwosari
               </h3>
               {currentUserEmail ? (
                 <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-350">
@@ -548,7 +847,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           
           <button
             onClick={onClose}
-            className="p-2 bg-slate-800 hover:bg-slate-750 rounded-full text-slate-300 hover:text-white transition-all cursor-pointer"
+            className="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 hover:text-white transition-all cursor-pointer"
             title="Tutup Panel Admin"
           >
             <X size={16} />
@@ -673,30 +972,43 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           /* ADMIN DASHBOARD WORKSPACE */
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* Sidebar Controls */}
-            <div className="w-full md:w-56 bg-slate-900 text-white flex flex-col shrink-0 border-r border-slate-800">
-              <div className="p-4 border-b border-slate-800 hidden md:block">
-                <span className="text-[10px] text-slate-450 uppercase tracking-widest font-extrabold block">Menu Dashboard</span>
+            <div className="w-full md:w-72 bg-slate-950 text-white flex flex-col shrink-0 border-r border-slate-800">
+              <div className="p-5 border-b border-slate-800 hidden md:block">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-extrabold block">Menu Dashboard</span>
+                <p className="text-xs text-slate-300 font-semibold mt-1">Kelola konten, data, HTML, dan JSON website.</p>
               </div>
               
-              <nav className="p-2 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible">
-                <button
-                  onClick={() => { setActiveTab("admins"); setIsAdding(false); setEditingId(null); }}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
-                    activeTab === "admins"
-                      ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                  }`}
-                >
-                  <Shield size={14} />
-                  Kelola Admin
-                </button>
+              <nav className="p-3 flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-x-visible">
+<button
+                   onClick={() => { setActiveTab("admins"); setIsAdding(false); setEditingId(null); }}
+                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
+                     activeTab === "admins"
+                       ? "bg-blue-600 text-white font-bold"
+                       : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                   }`}
+                 >
+                   <Shield size={14} />
+                   Kelola Admin
+                 </button>
+
+                 <button
+                   onClick={() => { setActiveTab("welcome"); setIsAdding(false); setEditingId(null); }}
+                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
+                     activeTab === "welcome"
+                       ? "bg-blue-600 text-white font-bold"
+                       : "text-slate-400 hover:bg-slate-900 hover:text-white"
+                   }`}
+                 >
+                   <Quote size={14} />
+                   Kelola Profil
+                 </button>
 
                 <button
                   onClick={() => { setActiveTab("programs"); setIsAdding(false); setEditingId(null); }}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "programs"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Layers size={14} />
@@ -708,7 +1020,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "achievements"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Award size={14} />
@@ -720,7 +1032,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "agendas"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Calendar size={14} />
@@ -732,7 +1044,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "news"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Newspaper size={14} />
@@ -744,7 +1056,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "registrations"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Users size={14} />
@@ -756,7 +1068,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all ${
                     activeTab === "dev"
                       ? "bg-blue-600 text-white font-bold"
-                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                      : "text-slate-400 hover:bg-slate-900 hover:text-white"
                   }`}
                 >
                   <Code size={14} />
@@ -776,7 +1088,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
             </div>
 
             {/* Main Action Working Canvas Workspace */}
-            <div className="flex-1 bg-slate-50 p-4 md:p-6 overflow-y-auto flex flex-col gap-5">
+            <div className="flex-1 bg-slate-100 p-4 md:p-6 lg:p-8 overflow-y-auto flex flex-col gap-5">
               
               {/* 1. MANAGE ADMINS TAB */}
               {activeTab === "admins" && (
@@ -930,6 +1242,435 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {/* 1.5 MANAGE WELCOME / SCHOOL PROFILE TAB */}
+              {activeTab === "welcome" && (
+                <form onSubmit={handleWelcomeSubmit} className="w-full max-w-5xl mx-auto space-y-5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-4.5 rounded-2xl border border-slate-200 gap-3">
+                    <div>
+                      <h4 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">Kelola Sambutan, Visi, Misi & Tujuan</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Ubah isi profil sekolah yang tampil di halaman utama website.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWelcomeForm(buildWelcomeForm());
+                          setIsEditingWelcome(false);
+                          setWelcomeEditStatus(null);
+                        }}
+                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="submit"
+                        onClick={() => setIsEditingWelcome(true)}
+                        className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Check size={14} />
+                        Simpan Profil
+                      </button>
+                    </div>
+                  </div>
+
+                  {welcomeEditStatus && (
+                    <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                      welcomeEditStatus.success ? "bg-emerald-50 text-emerald-800 border border-emerald-100" : "bg-red-50 text-red-800 border border-red-100"
+                    }`}>
+                      {welcomeEditStatus.success ? <Check size={14} /> : <AlertCircle size={14} />}
+                      <span>{welcomeEditStatus.message}</span>
+                    </div>
+                  )}
+
+                  <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Label Kecil Section</label>
+                        <input
+                          type="text"
+                          value={welcomeForm.eyebrow}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            setWelcomeForm({ ...welcomeForm, eyebrow: e.target.value });
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3.5 py-2.5 rounded-xl text-xs font-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Judul Section</label>
+                        <input
+                          type="text"
+                          value={welcomeForm.title}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            setWelcomeForm({ ...welcomeForm, title: e.target.value });
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3.5 py-2.5 rounded-xl text-xs font-medium"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Deskripsi Section</label>
+                      <textarea
+                        rows={2}
+                        value={welcomeForm.description}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, description: e.target.value });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3.5 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <section className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-800">
+                        <Quote size={16} className="text-blue-600" />
+                        <h5 className="font-heading font-extrabold text-sm">Sambutan Kepala Sekolah</h5>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          placeholder="Label tab"
+                          value={welcomeForm.sambutan.label}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, label: e.target.value } });
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Badge"
+                          value={welcomeForm.sambutan.badge}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, badge: e.target.value } });
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Judul sambutan"
+                        value={welcomeForm.sambutan.title}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, title: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <textarea
+                        rows={2}
+                        placeholder="Kutipan utama"
+                        value={welcomeForm.sambutan.quote}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, quote: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                      {welcomeForm.sambutan.paragraphs.map((paragraph, index) => (
+                        <textarea
+                          key={index}
+                          rows={index === 0 ? 2 : 3}
+                          placeholder={`Paragraf sambutan ${index + 1}`}
+                          value={paragraph}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            updateWelcomeParagraph(index, e.target.value);
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                        />
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, paragraphs: [...welcomeForm.sambutan.paragraphs, ""] } });
+                        }}
+                        className="text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl px-3 py-2 text-xs font-bold"
+                      >
+                        Tambah Paragraf
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="Kalimat penutup"
+                        value={welcomeForm.sambutan.closing}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, sambutan: { ...welcomeForm.sambutan, closing: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                    </section>
+
+                    <section className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-800">
+                        <Eye size={16} className="text-blue-600" />
+                        <h5 className="font-heading font-extrabold text-sm">Visi Sekolah</h5>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Label tab"
+                        value={welcomeForm.visi.label}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, label: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Badge visi"
+                        value={welcomeForm.visi.badge}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, badge: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Isi visi sekolah"
+                        value={welcomeForm.visi.title}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, title: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                      <textarea
+                        rows={2}
+                        placeholder="Pengantar visi"
+                        value={welcomeForm.visi.intro}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, intro: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Deskripsi visi"
+                        value={welcomeForm.visi.description}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, description: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                      {welcomeForm.visi.highlights.map((item, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Judul poin visi"
+                            value={item.title}
+                            onChange={(e) => {
+                              setIsEditingWelcome(true);
+                              updateVisiHighlight(index, "title", e.target.value);
+                            }}
+                            className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Deskripsi poin visi"
+                            value={item.desc}
+                            onChange={(e) => {
+                              setIsEditingWelcome(true);
+                              updateVisiHighlight(index, "desc", e.target.value);
+                            }}
+                            className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                          />
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, visi: { ...welcomeForm.visi, highlights: [...welcomeForm.visi.highlights, { title: "", desc: "" }] } });
+                        }}
+                        className="text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl px-3 py-2 text-xs font-bold"
+                      >
+                        Tambah Poin Visi
+                      </button>
+                    </section>
+
+                    <section className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-800">
+                        <Target size={16} className="text-blue-600" />
+                        <h5 className="font-heading font-extrabold text-sm">Misi Sekolah</h5>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Label tab"
+                        value={welcomeForm.misi.label}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, label: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Badge misi"
+                        value={welcomeForm.misi.badge}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, badge: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Judul misi"
+                        value={welcomeForm.misi.title}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, title: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      {welcomeForm.misi.items.map((item, index) => (
+                        <textarea
+                          key={index}
+                          rows={2}
+                          placeholder={`Misi ${index + 1}`}
+                          value={item}
+                          onChange={(e) => {
+                            setIsEditingWelcome(true);
+                            updateMisiItem(index, e.target.value);
+                          }}
+                          className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                        />
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, items: [...welcomeForm.misi.items, ""] } });
+                        }}
+                        className="text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl px-3 py-2 text-xs font-bold"
+                      >
+                        Tambah Misi
+                      </button>
+                      <input
+                        type="text"
+                        placeholder="Judul panel misi"
+                        value={welcomeForm.misi.panelTitle}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, panelTitle: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Deskripsi panel misi"
+                        value={welcomeForm.misi.panelDescription}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, misi: { ...welcomeForm.misi, panelDescription: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                    </section>
+
+                    <section className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-slate-800">
+                        <Flag size={16} className="text-blue-600" />
+                        <h5 className="font-heading font-extrabold text-sm">Tujuan Sekolah</h5>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Label tab"
+                        value={welcomeForm.tujuan.label}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, label: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Badge tujuan"
+                        value={welcomeForm.tujuan.badge}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, badge: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Judul tujuan"
+                        value={welcomeForm.tujuan.title}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, title: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Judul panel samping"
+                        value={welcomeForm.tujuan.sideTitle}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, sideTitle: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                      />
+                      <textarea
+                        rows={3}
+                        placeholder="Deskripsi panel samping"
+                        value={welcomeForm.tujuan.sideDescription}
+                        onChange={(e) => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, sideDescription: e.target.value } });
+                        }}
+                        className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium leading-relaxed"
+                      />
+                      {welcomeForm.tujuan.goals.map((item, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Judul tujuan"
+                            value={item.title}
+                            onChange={(e) => {
+                              setIsEditingWelcome(true);
+                              updateTujuanGoal(index, "title", e.target.value);
+                            }}
+                            className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Deskripsi tujuan"
+                            value={item.desc}
+                            onChange={(e) => {
+                              setIsEditingWelcome(true);
+                              updateTujuanGoal(index, "desc", e.target.value);
+                            }}
+                            className="w-full border border-slate-200 outline-none px-3 py-2 rounded-xl text-xs font-medium"
+                          />
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingWelcome(true);
+                          setWelcomeForm({ ...welcomeForm, tujuan: { ...welcomeForm.tujuan, goals: [...welcomeForm.tujuan.goals, { title: "", desc: "" }] } });
+                        }}
+                        className="text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl px-3 py-2 text-xs font-bold"
+                      >
+                        Tambah Tujuan
+                      </button>
+                    </section>
+                  </div>
+                </form>
               )}
 
               {/* 2. MANAGE PROGRAMS TAB */}
@@ -1757,17 +2498,17 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
               {/* 6. DEVELOPER MODES (HTML & JSON DIRECT CODES) */}
               {activeTab === "dev" && (
-                <div className="max-w-4xl w-full mx-auto space-y-6">
+                <div className="w-full space-y-6">
                   {/* Tab Title */}
-                  <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-xl">
+                  <div className="bg-slate-950 text-white p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
-                        <h4 className="font-heading font-extrabold text-white text-sm md:text-base flex items-center gap-2">
+                        <h4 className="font-heading font-extrabold text-white text-base md:text-lg flex items-center gap-2">
                           <Code size={18} className="text-blue-500 animate-pulse" />
-                          Mode Lanjutan: Editor Kode Sumber
+                          Editor Kode Website
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                          Ubah dan kelola data website SDN 3 secara aman langsung melalui format HTML dan database JSON.
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                          Tampilkan dan sunting konten website dalam format JSON lengkap atau HTML utuh dari satu ruang kerja fullscreen.
                         </p>
                       </div>
                       
@@ -1791,7 +2532,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
-                          Pengumuman HTML
+                          HTML Utuh
                         </button>
                       </div>
                     </div>
@@ -1799,14 +2540,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                   {/* SUBTAB 1: JSON CODES DIRECT TRANSLATION */}
                   {devSubTab === "json" && (
-                    <div className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6 space-y-4 shadow-sm">
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 space-y-4 shadow-sm">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div>
-                          <h5 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">
-                            Edit Database JSON
+                          <h5 className="font-heading font-extrabold text-slate-800 text-base md:text-lg">
+                            Edit JSON Lengkap
                           </h5>
-                          <p className="text-[11px] text-slate-400 mt-0.5">
-                            Pilih tabel koleksi untuk memuat dan menyunting baris data mentah secara massal.
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            Pilih "Seluruh Website" untuk melihat semua konten, atau pilih koleksi tertentu untuk edit lebih fokus.
                           </p>
                         </div>
 
@@ -1816,17 +2557,24 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           <select
                             value={selectedJsonCollection}
                             onChange={(e: any) => setSelectedJsonCollection(e.target.value)}
-                            className="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 cursor-pointer w-full sm:w-48"
+                            className="text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 cursor-pointer w-full sm:w-64"
                           >
+                            <option value="all">Seluruh Website</option>
+                            <option value="siteContent">Teks Tampilan Utama</option>
+                            <option value="customHTML">HTML Kustom</option>
                             <option value="programs">Program & Ekskul</option>
                             <option value="achievements">Prestasi Sekolah</option>
                             <option value="agendas">Agenda Kegiatan</option>
                             <option value="news">Kabar & Berita</option>
                             <option value="admins">Hak Akses Admin</option>
                             <option value="stats">Statistik Sekolah</option>
+                            <option value="teachers">Guru & Staff</option>
+                            <option value="facilities">Sarana Prasarana</option>
                             <option value="gallery">Galeri Foto</option>
                             <option value="faqs">Tanya-Jawab FAQ</option>
                             <option value="downloads">Download Berkas</option>
+                            <option value="testimonials">Testimoni</option>
+                            <option value="innovations">Inovasi</option>
                           </select>
                         </div>
                       </div>
@@ -1859,7 +2607,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           value={textareaJsonValue}
                           onChange={(e) => setTextareaJsonValue(e.target.value)}
                           placeholder="Loading JSON data..."
-                          className="w-full h-96 p-4 font-mono text-xs text-blue-400 bg-slate-900 border border-slate-950 focus:ring-2 focus:ring-blue-600/25 rounded-2xl outline-none resize-y leading-relaxed"
+                          className="w-full h-[62vh] min-h-[520px] p-4 font-mono text-xs text-blue-100 bg-slate-950 border border-slate-900 focus:ring-2 focus:ring-blue-600/25 rounded-2xl outline-none resize-y leading-relaxed"
                           spellCheck={false}
                         />
                       </div>
@@ -1867,11 +2615,11 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       {/* Buttons */}
                       <div className="flex justify-between items-center pt-2 gap-4">
                         <p className="text-[10px] text-slate-400 leading-relaxed max-w-md font-medium">
-                          <strong className="text-red-500 font-bold">Pemberitahuan:</strong> Pastikan isi kolom berupa Array JSON yang valid sesuai atribut awal.
+                          <strong className="text-red-500 font-bold">Pemberitahuan:</strong> Koleksi biasa memakai Array JSON. Seluruh Website dan Teks Tampilan Utama memakai Object JSON.
                         </p>
                         <button
                           onClick={handleSaveJson}
-                          className="px-6 py-2.5 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-98 cursor-pointer flex items-center gap-2 shrink-0 select-none"
+                          className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-98 cursor-pointer flex items-center gap-2 shrink-0 select-none"
                         >
                           <Check size={14} />
                           Simpan Database
@@ -1882,23 +2630,43 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                   {/* SUBTAB 2: EMBEDDABLE RESPONSIVE HTML PAGE WIDGET */}
                   {devSubTab === "html" && (
-                    <div className="bg-white rounded-3xl border border-slate-200 p-5 md:p-6 space-y-4 shadow-sm">
-                      <div>
-                        <h5 className="font-heading font-extrabold text-slate-800 text-sm md:text-base">
-                          Widget Custom HTML Pengumuman
-                        </h5>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Tulis atau tempel kode HTML kustom untuk memunculkan billboard khusus, peta, video embed, atau dekorasi khusus langsung pada beranda website.
-                        </p>
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-6 space-y-4 shadow-sm">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div>
+                          <h5 className="font-heading font-extrabold text-slate-800 text-base md:text-lg">
+                            Editor HTML
+                          </h5>
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            Mode HTML utuh menampilkan snapshot struktur halaman. Mode HTML kustom digunakan untuk blok tambahan yang tampil di beranda.
+                          </p>
+                        </div>
+                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                          <button
+                            type="button"
+                            onClick={() => setHtmlMode("full")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              htmlMode === "full" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            HTML Utuh
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHtmlMode("custom")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              htmlMode === "custom" ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                            }`}
+                          >
+                            HTML Kustom
+                          </button>
+                        </div>
                       </div>
 
                       {/* Help examples container */}
-                      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-[11px] text-blue-855 space-y-2 leading-relaxed">
-                        <p className="font-bold">💡 Ide Custom Widget HTML yang bisa anda pasangkan:</p>
-                        <ul className="list-disc pl-4 space-y-1 text-[10px] text-slate-650">
-                          <li><strong>Spanduk Berjalan:</strong> <code className="bg-white px-1 py-0.5 rounded font-mono text-rose-600">&lt;marquee className="text-xs font-bold text-red-650 bg-red-50 p-2 border border-red-100 rounded-xl block"&gt;Pendaftaran Pindahan PPDB Telah Dibuka!&lt;/marquee&gt;</code></li>
-                          <li><strong>Badge/Map Frame / Video Youtube:</strong> Salin script embed kemudian tempelkan disini.</li>
-                        </ul>
+                      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-[11px] text-blue-900 leading-relaxed">
+                        {htmlMode === "full"
+                          ? "HTML utuh ini adalah tampilan gabungan dari data website saat ini. Untuk mengubah konten halaman utama secara aman, gunakan JSON Seluruh Website atau Teks Tampilan Utama."
+                          : "HTML kustom akan ditampilkan sebagai blok tambahan di beranda, cocok untuk pengumuman, embed video, peta, atau banner khusus."}
                       </div>
 
                       {htmlSuccess && (
@@ -1915,7 +2683,7 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                           value={htmlValue}
                           onChange={(e) => setHtmlValue(e.target.value)}
                           placeholder="Masukkan markup HTML di sini..."
-                          className="w-full h-80 p-4 font-mono text-xs text-emerald-400 bg-slate-900 border border-slate-950 focus:ring-2 focus:ring-blue-600/25 rounded-2xl outline-none resize-y leading-relaxed"
+                          className="w-full h-[62vh] min-h-[520px] p-4 font-mono text-xs text-emerald-100 bg-slate-950 border border-slate-900 focus:ring-2 focus:ring-blue-600/25 rounded-2xl outline-none resize-y leading-relaxed"
                           spellCheck={false}
                         />
                       </div>
