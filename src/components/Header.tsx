@@ -31,9 +31,10 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import SchoolLogo from "./SchoolLogo";
 import { useAdmin } from "../context/AdminContext";
+import EditableText from "./editor/EditableText";
 
 interface HeaderProps {
-  activeSection: string;
+  activeSection?: string;
 }
 
 const spanVariants = {
@@ -44,10 +45,31 @@ const spanVariants = {
 
 const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.5 };
 
-export default function Header({ activeSection }: HeaderProps) {
-  const { siteContent } = useAdmin();
+export default function Header({ activeSection: activeSectionProp }: HeaderProps) {
+  const { siteContent, updateSiteContent } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const updateHeader = (key: string, value: string) => {
+    updateSiteContent({
+      ...siteContent,
+      header: { ...siteContent.header, [key]: value }
+    });
+  };
+
+  const getActiveSection = () => {
+    if (location.pathname === "/program") return "program";
+    if (location.pathname.startsWith("/berita")) return "berita";
+    if (location.pathname === "/galeri") return "galeri";
+    if (location.pathname === "/layanan") return "layanan";
+    if (location.pathname === "/pendaftaran") return "spmb";
+    if (location.pathname === "/download") return "download";
+    if (location.pathname === "/tim") return "sambutan";
+    if (location.pathname === "/fasilitas") return "sambutan";
+    return activeSectionProp || "hero";
+  };
+
+  const activeSection = getActiveSection();
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfilHovered, setIsProfilHovered] = useState(false);
@@ -196,10 +218,10 @@ export default function Header({ activeSection }: HeaderProps) {
           <SchoolLogo size={46} className="transition-transform group-hover:scale-105 duration-300" />
           <div className="flex flex-col">
             <span className="font-heading font-extrabold text-white text-sm md:text-base leading-none tracking-tight group-hover:text-brand-sky transition-colors">
-              {siteContent.header.brandTitle}
+              <EditableText value={siteContent.header.brandTitle} onChange={(v) => updateHeader('brandTitle', v)} />
             </span>
             <span className="text-[9px] uppercase tracking-[0.11em] font-bold text-slate-300 mt-1.5">
-              {siteContent.header.tagline}
+              <EditableText value={siteContent.header.tagline} onChange={(v) => updateHeader('tagline', v)} />
             </span>
           </div>
         </div>

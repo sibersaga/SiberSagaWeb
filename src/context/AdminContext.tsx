@@ -112,7 +112,7 @@ interface AdminContextType {
   updateManualLogin: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-type SiteContent = {
+export type SiteContent = {
   topbar: {
     contactEmail: string;
     location: string;
@@ -211,6 +211,8 @@ type SiteContent = {
     title: string;
     items: string[];
   };
+  sectionOrder: string[];
+  hiddenSections: string[];
 };
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -385,6 +387,12 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
       "Bagi calon pendaftar PPDB, berkas fisik dapat diserahkan ke ruang sekretariat panitia pada hari kerja.",
     ],
   },
+  sectionOrder: [
+    "hero", "stats", "welcome", "teachers", "conditions",
+    "programs", "achievements", "innovations", "news",
+    "gallery", "services", "testimonials", "videomap",
+  ],
+  hiddenSections: [],
 };
 
 interface ManualLoginConfig {

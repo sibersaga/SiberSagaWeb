@@ -7,10 +7,24 @@ import React from "react";
 import { ArrowRight, BookOpen, UserCheck, ShieldCheck } from "lucide-react";
 import { SplineScene } from "./SplineScene";
 import { useAdmin } from "../context/AdminContext";
+import EditableText from "./editor/EditableText";
 
 export default function Hero() {
-  const { siteContent } = useAdmin();
+  const { siteContent, updateSiteContent } = useAdmin();
   const hero = siteContent.hero;
+
+  const updateHero = (key: string, value: any) => {
+    updateSiteContent({
+      ...siteContent,
+      hero: { ...hero, [key]: value }
+    });
+  };
+
+  const updateCard = (index: number, key: 'title' | 'description', value: string) => {
+    const newCards = [...hero.cards];
+    newCards[index] = { ...newCards[index], [key]: value };
+    updateHero('cards', newCards);
+  };
 
   const handleScrollTo = (id: string) => {
     const element = document.getElementById(`section-${id}`);
@@ -36,32 +50,38 @@ export default function Hero() {
           <div className="flex-1 min-w-0 z-10">
             <span className="inline-flex items-center gap-1.5 bg-brand-sky/10 text-brand-sky px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider mb-5">
               <BookOpen size={13} />
-              {hero.badge}
+              <EditableText value={hero.badge} onChange={(v) => updateHero('badge', v)} />
             </span>
             <span className="block text-[#64748B] font-bold text-[11px] uppercase tracking-[0.2em] mb-2 pl-0.5">
-              {hero.schoolName}
+              <EditableText value={hero.schoolName} onChange={(v) => updateHero('schoolName', v)} />
             </span>
-            <h1 className="text-brand-navy text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5">
-              {hero.titlePrimary} <span className="text-brand-sky">{hero.titleSecondary.split(",")[0]}</span>,<br />
-              {hero.titleSecondary.includes(",") ? hero.titleSecondary.split(",").slice(1).join(",").trim() : hero.titleSecondary}
+            <h1 className="text-brand-navy text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight mb-5 flex flex-wrap gap-x-2">
+              <EditableText value={hero.titlePrimary} onChange={(v) => updateHero('titlePrimary', v)} /> 
+              <span className="text-brand-sky w-full mt-2">
+                <EditableText value={hero.titleSecondary} onChange={(v) => updateHero('titleSecondary', v)} multiline />
+              </span>
             </h1>
-            <p className="text-[#64748B] text-sm md:text-base leading-relaxed max-w-xl mb-8 font-normal">
-              {hero.description}
-            </p>
+            <EditableText 
+              value={hero.description} 
+              onChange={(v) => updateHero('description', v)} 
+              tag="p"
+              multiline
+              className="text-[#64748B] text-sm md:text-base leading-relaxed max-w-xl mb-8 font-normal"
+            />
             
             <div className="flex flex-wrap items-center gap-4">
               <button
                 onClick={() => handleScrollTo("spmb")}
                 className="bg-brand-sky hover:bg-brand-sky/95 text-white px-8 py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-brand-sky/20 transition-all transform active:scale-95 flex items-center gap-2 cursor-pointer opacity-100"
               >
-                {hero.primaryButton}
+                <EditableText value={hero.primaryButton} onChange={(v) => updateHero('primaryButton', v)} />
                 <ArrowRight size={15} />
               </button>
               <button
                 onClick={() => handleScrollTo("sambutan")}
                 className="border-2 border-brand-light text-brand-navy hover:bg-brand-light px-8 py-3.5 rounded-2xl font-bold text-sm bg-white transition-all transform active:scale-95 cursor-pointer"
               >
-                {hero.secondaryButton}
+                <EditableText value={hero.secondaryButton} onChange={(v) => updateHero('secondaryButton', v)} />
               </button>
             </div>
           </div>
@@ -103,8 +123,19 @@ export default function Hero() {
               <ShieldCheck size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-brand-navy">{hero.cards[0].title}</h3>
-              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">{hero.cards[0].description}</p>
+              <EditableText 
+                tag="h3" 
+                value={hero.cards[0].title} 
+                onChange={(v) => updateCard(0, 'title', v)} 
+                className="font-bold text-sm text-brand-navy block" 
+              />
+              <EditableText 
+                tag="p" 
+                multiline
+                value={hero.cards[0].description} 
+                onChange={(v) => updateCard(0, 'description', v)} 
+                className="text-xs text-[#64748B] mt-1.5 leading-relaxed block" 
+              />
             </div>
           </div>
           
@@ -113,8 +144,19 @@ export default function Hero() {
               <UserCheck size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-brand-navy">{hero.cards[1].title}</h3>
-              <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">{hero.cards[1].description}</p>
+              <EditableText 
+                tag="h3" 
+                value={hero.cards[1].title} 
+                onChange={(v) => updateCard(1, 'title', v)} 
+                className="font-bold text-sm text-brand-navy block" 
+              />
+              <EditableText 
+                tag="p" 
+                multiline
+                value={hero.cards[1].description} 
+                onChange={(v) => updateCard(1, 'description', v)} 
+                className="text-xs text-[#64748B] mt-1.5 leading-relaxed block" 
+              />
             </div>
           </div>
 
@@ -123,8 +165,19 @@ export default function Hero() {
               <BookOpen size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[#1E293B]">{hero.cards[2].title}</h3>
-              <p className="text-xs text-[#1E293B]/80 mt-1.5 leading-relaxed">{hero.cards[2].description}</p>
+              <EditableText 
+                tag="h3" 
+                value={hero.cards[2].title} 
+                onChange={(v) => updateCard(2, 'title', v)} 
+                className="font-bold text-sm text-[#1E293B] block" 
+              />
+              <EditableText 
+                tag="p" 
+                multiline
+                value={hero.cards[2].description} 
+                onChange={(v) => updateCard(2, 'description', v)} 
+                className="text-xs text-[#1E293B]/80 mt-1.5 leading-relaxed block" 
+              />
             </div>
           </div>
         </div>

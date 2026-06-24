@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from "react";
-import Breadcrumb from "../shared/Breadcrumb";
+import Breadcrumb from "../components/shared/Breadcrumb";
 import { motion, AnimatePresence } from "motion/react";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 

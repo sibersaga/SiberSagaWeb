@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from "react";
-import Breadcrumb from "../shared/Breadcrumb";
-import { useAdmin } from "../../context/AdminContext";
+import Breadcrumb from "../components/shared/Breadcrumb";
+import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Mail, X } from "lucide-react";
 

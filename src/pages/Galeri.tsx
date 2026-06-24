@@ -4,9 +4,9 @@
  */
 
 import React, { useState, useMemo } from "react";
-import Breadcrumb from "../shared/Breadcrumb";
-import SearchBar from "../shared/SearchBar";
-import { useAdmin } from "../../context/AdminContext";
+import Breadcrumb from "../components/shared/Breadcrumb";
+import SearchBar from "../components/shared/SearchBar";
+import { useAdmin } from "../context/AdminContext";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 

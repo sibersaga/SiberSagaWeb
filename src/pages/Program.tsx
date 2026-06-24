@@ -5,8 +5,8 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import Breadcrumb from "../shared/Breadcrumb";
-import { useAdmin } from "../../context/AdminContext";
+import Breadcrumb from "../components/shared/Breadcrumb";
+import { useAdmin } from "../context/AdminContext";
 import { Award, BookOpen, Music, Dumbbell } from "lucide-react";
 
 export default function Program() {
