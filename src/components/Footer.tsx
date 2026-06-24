@@ -82,6 +82,7 @@ export default function Footer({ onOpenAdmin }: FooterProps) {
               <button onClick={() => handleScrollTo("program")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Akademik</button>
               <button onClick={() => handleScrollTo("prestasi")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Prestasi</button>
               <button onClick={() => handleScrollTo("berita")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Berita</button>
+              <button onClick={() => handleScrollTo("layanan")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Layanan</button>
               <button onClick={() => handleScrollTo("spmb")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">PPDB</button>
               <button onClick={() => handleScrollTo("download")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Download</button>
               <button onClick={() => handleScrollTo("kontak")} className="text-left text-slate-400 hover:text-amber-400 transition-colors">Kontak</button>

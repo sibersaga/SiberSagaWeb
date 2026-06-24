@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SchoolStat, Program, NewsItem, Achievement, AgendaEvent, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation } from "./types";
+import { SchoolStat, Program, NewsItem, Achievement, AgendaEvent, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation, ServiceFile } from "./types";
 
 export const schoolStats: SchoolStat[] = [
   {
@@ -625,4 +625,63 @@ export const defaultInnovations: Innovation[] = [
     impactTitle: "Pondasi Penalaran Kritis",
     impactDesc: "Mendorong nilai kompetensi asesmen nasional literasi SDN 3 Purwosari melampaui rata-rata nasional, melahirkan generasi haus ilmu yang kritis dan ekspresif."
   }
+];
+
+export const serviceFiles: ServiceFile[] = [
+  {
+    id: "srv-1",
+    title: "Panduan Pendaftaran PPDB Online",
+    category: "Pendaftaran",
+    description: "Langkah-langkah lengkap cara mendaftar siswa baru melalui sistem PPDB online.",
+    icon: "FileText",
+  },
+  {
+    id: "srv-2",
+    title: "Dokumen Persyaratan Pendaftaran",
+    category: "Persyaratan",
+    description: "Daftar lengkap dokumen yang diperlukan untuk proses pendaftaran.",
+    icon: "CheckCircle2",
+  },
+  {
+    id: "srv-3",
+    title: "Formulir Informasi Wali Murid",
+    category: "Formulir",
+    description: "Formulir pengumpulan data orangtua/wali murid untuk keperluan administrasi.",
+    icon: "ClipboardList",
+  },
+  {
+    id: "srv-4",
+    title: "Tata Tertib Siswa",
+    category: "Peraturan",
+    description: "Peraturan dan tata tertib yang harus dipatuhi seluruh siswa SDN 3 Purwosari.",
+    icon: "BookOpen",
+  },
+  {
+    id: "srv-5",
+    title: "Kalender Akademik 2025/2026",
+    category: "Akademik",
+    description: "Jadwal lengkap tahun ajaran 2025/2026 termasuk libur dan kegiatan penting.",
+    icon: "Calendar",
+  },
+  {
+    id: "srv-6",
+    title: "Brosur Sekolah",
+    category: "Informasi Umum",
+    description: "Brosur lengkap profil dan keunggulan SDN 3 Purwosari Wonogiri.",
+    icon: "MapPin",
+  },
+  {
+    id: "srv-7",
+    title: "Laporan Hasil Belajar (Rapor)",
+    category: "Akademik",
+    description: "Template dan informasi tentang laporan hasil belajar siswa.",
+    icon: "Award",
+  },
+  {
+    id: "srv-8",
+    title: "Surat Keterangan Sehat",
+    category: "Kesehatan",
+    description: "Formulir pemeriksaan kesehatan untuk calon siswa baru.",
+    icon: "Heart",
+  },
 ];

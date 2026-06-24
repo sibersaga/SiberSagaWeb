@@ -124,3 +124,12 @@ export interface Innovation {
   impactTitle: string;
   impactDesc: string;
 }
+
+export interface ServiceFile {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  icon: string;
+  url?: string;
+}

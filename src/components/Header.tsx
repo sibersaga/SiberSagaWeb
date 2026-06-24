@@ -4,17 +4,18 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { 
-  Menu, 
-  X, 
-  Home, 
-  User, 
-  GraduationCap, 
-  Newspaper, 
-  Award, 
-  Image as ImageIcon, 
-  FileText, 
-  Download, 
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Menu,
+  X,
+  Home,
+  User,
+  GraduationCap,
+  Newspaper,
+  Award,
+  Image as ImageIcon,
+  FileText,
+  Download,
   MapPin,
   Search,
   Share2,
@@ -24,7 +25,8 @@ import {
   Facebook,
   Twitter,
   MessageCircle,
-  Lightbulb
+  Lightbulb,
+  Briefcase
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import SchoolLogo from "./SchoolLogo";
@@ -44,6 +46,8 @@ const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0
 
 export default function Header({ activeSection }: HeaderProps) {
   const { siteContent } = useAdmin();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfilHovered, setIsProfilHovered] = useState(false);
@@ -102,6 +106,7 @@ export default function Header({ activeSection }: HeaderProps) {
       inovasi: Lightbulb,
       berita: Newspaper,
       galeri: ImageIcon,
+      layanan: Briefcase,
       spmb: FileText,
       download: Download,
       kontak: MapPin,
@@ -116,15 +121,60 @@ export default function Header({ activeSection }: HeaderProps) {
 
   const handleScrollTo = (id: string) => {
     setIsMobileMenuOpen(false);
-    const element = document.getElementById(`section-${id}`);
-    if (element) {
-      const topOffset = 80; // height of sticking navbar
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - topOffset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+
+    // Map old section IDs to new routes
+    const routeMap: Record<string, string> = {
+      hero: "/",
+      sambutan: "/",
+      guru: "/tim",
+      fasilitas: "/fasilitas",
+      kondisi: "/",
+      program: "/program",
+      prestasi: "/",
+      inovasi: "/",
+      berita: "/berita",
+      galeri: "/galeri",
+      layanan: "/layanan",
+      spmb: "/pendaftaran",
+      download: "/download",
+      kontak: "/",
+    };
+
+    const route = routeMap[id] || "/";
+
+    if (route === "/" && location.pathname !== "/") {
+      // Navigating to home, scroll to section
+      navigate("/");
+      setTimeout(() => {
+        const element = document.getElementById(`section-${id}`);
+        if (element) {
+          const topOffset = 80;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - topOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }, 200);
+    } else if (route !== "/" && location.pathname === "/" && id !== "hero") {
+      // Navigating to another page
+      navigate(route);
+    } else if (route === "/" && id !== "hero") {
+      // Already on home, just scroll
+      const element = document.getElementById(`section-${id}`);
+      if (element) {
+        const topOffset = 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - topOffset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        });
+      }
+    } else {
+      // Navigate to page
+      navigate(route);
     }
   };
 

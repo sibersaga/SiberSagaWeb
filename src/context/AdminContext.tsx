@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Program, Achievement, AgendaEvent, NewsItem, SchoolStat, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation } from "../types";
+import { Program, Achievement, AgendaEvent, NewsItem, SchoolStat, GalleryPhoto, FAQItem, DownloadFile, Teacher, Facility, Testimonial, Innovation, ServiceFile } from "../types";
 import {
   schoolPrograms,
   schoolAchievements,
@@ -13,6 +13,7 @@ import {
   defaultFacilities,
   defaultTestimonials,
   defaultInnovations,
+  serviceFiles,
 } from "../data";
 import {
   getCollection,
@@ -61,6 +62,9 @@ interface AdminContextType {
   setTestimonials: (items: Testimonial[]) => void;
   innovations: Innovation[];
   setInnovations: (items: Innovation[]) => void;
+
+  services: ServiceFile[];
+  setServices: (files: ServiceFile[]) => void;
 
   setPrograms: (programs: Program[]) => void;
   setAchievements: (achievements: Achievement[]) => void;
@@ -233,6 +237,7 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
       { id: "inovasi", label: "Inovasi" },
       { id: "berita", label: "Berita" },
       { id: "galeri", label: "Galeri" },
+      { id: "layanan", label: "Layanan" },
       { id: "spmb", label: "SPMB" },
       { id: "download", label: "Download" },
       { id: "kontak", label: "Kontak" },
@@ -249,6 +254,7 @@ const DEFAULT_SITE_CONTENT: SiteContent = {
       { title: "Portal Berita & Informasi Kegiatan", id: "berita", category: "Informasi", desc: "Kabar terbaru kegiatan KBM, pameran seni, outbound, dsb." },
       { title: "Agenda Kegiatan Utama", id: "agenda", category: "Informasi", desc: "Jadwal penting sekolah: pembagian raport, rapat wali murid, dan pendaftaran." },
       { title: "Galeri Foto Dokumentasi KBM", id: "galeri", category: "Dokumentasi", desc: "Koleksi foto kegiatan belajar siswa di kelas dan ekstrakurikuler." },
+      { title: "Layanan Berkas Pelayanan", id: "layanan", category: "Layanan", desc: "Daftar lengkap file dan formulir layanan pendidikan SDN 3 Purwosari." },
       { title: "Penerimaan Murid Baru (SPMB / FAQ)", id: "spmb", category: "PPDB", desc: "Formulir pendaftaran siswa baru, biaya gratis, FAQ pendaftaran." },
       { title: "Pusat Unduhan Brosur & Dokumen", id: "download", category: "Dokumentasi", desc: "Pusat download berkas PDF brosur, kalender akademik, dan berkas syarat pendaftaran." },
       { title: "Video Profil & Lokasi Sekolah", id: "kontak", category: "Kontak", desc: "Video dokumenter institusi, nomor telepon, email, dan integrasi Google Maps." },
@@ -477,6 +483,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [facilities, setFacilitiesState] = useState<Facility[]>(() => readStorage(extraStorageKeys.facilities, defaultFacilities));
   const [testimonials, setTestimonialsState] = useState<Testimonial[]>(() => readStorage(extraStorageKeys.testimonials, defaultTestimonials));
   const [innovations, setInnovationsState] = useState<Innovation[]>(() => readStorage(extraStorageKeys.innovations, defaultInnovations));
+  const [services, setServicesState] = useState<ServiceFile[]>(() => readStorage("sdn3_services", serviceFiles));
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -699,6 +706,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setInnovationsState(data);
     writeStorage(extraStorageKeys.innovations, data);
     syncExtra("innovations", data as any);
+  };
+
+  const setServices = (data: ServiceFile[]) => {
+    setServicesState(data);
+    writeStorage("sdn3_services", data);
+    syncExtra("services", data as any);
   };
 
   const updateCustomHTML = async (html: string) => {
@@ -1127,6 +1140,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         setTestimonials,
         innovations,
         setInnovations,
+        services,
+        setServices,
         setPrograms,
         setAchievements,
         setAgendas,
