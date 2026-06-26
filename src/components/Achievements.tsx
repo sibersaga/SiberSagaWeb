@@ -52,8 +52,16 @@ const achievementExtraDetails: { [key: string]: AchievementExtraDetail } = {
   }
 };
 
-export default function Achievements() {
-  const { achievements } = useAdmin();
+interface AchievementsProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  achievements?: Achievement[];
+}
+
+export default function Achievements(props: AchievementsProps) {
+  const { achievements: globalAchievements } = useAdmin();
+  const achievements = props.achievements && props.achievements.length > 0 ? props.achievements : globalAchievements;
   const carouselRef = useRef<HTMLDivElement>(null);
   const [selectedAch, setSelectedAch] = useState<Achievement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -114,15 +122,15 @@ export default function Achievements() {
         {/* Section Header with Navigation Controls */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-10 gap-4">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-500 px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              <Trophy size={11} className="text-amber-500 animate-bounce" />
-              Siswa Berprestasi
+            <span className="inline-flex items-center gap-1.5 bg-[#F59E0B]/10 text-[#F59E0B] px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+              <Trophy size={14} className="animate-pulse" />
+              {props.badge || "Pilar Kebanggaan"}
             </span>
-            <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-3 tracking-tight">
-              Prestasi Kebanggaan Sekolah
+            <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
+              {props.title || "Prestasi Gemilang Siswa"}
             </h2>
-            <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
-              Inspirasi tiada henti! SDN 3 Purwosari terus memupuk minat bakat dan mengukir tinta emas pada kejuaraan daerah hingga nasional.
+            <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed max-w-xl">
+              {props.subtitle || "Bukti nyata dari dedikasi, kerja keras, dan komitmen SDN 3 Purwosari dalam mencetak talenta berprestasi di berbagai tingkatan."}
             </p>
           </div>
           

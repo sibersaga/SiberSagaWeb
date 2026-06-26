@@ -23,11 +23,18 @@ import { useAdmin } from "../context/AdminContext";
 import EditableText from "./editor/EditableText";
 import EditableImage from "./editor/EditableImage";
 
-export default function Welcome() {
+interface WelcomeProps {
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  image?: string;
+  tabs?: any;
+}
+
+export default function Welcome(props: WelcomeProps) {
   const [activeTab, setActiveTab] = useState<string>("sambutan");
   const { siteContent, updateSiteContent } = useAdmin();
-  const welcome = siteContent.welcome;
-
+  const welcome = { ...siteContent.welcome, ...props };
   const updateWelcome = (key: string, value: any) => {
     updateSiteContent({
       ...siteContent,

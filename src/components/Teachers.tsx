@@ -14,8 +14,15 @@ interface Teacher {
   image: string;
 }
 
-export default function Teachers() {
-  const { teachers, setTeachers, isAdminMode } = useAdmin();
+interface TeachersProps {
+  title?: string;
+  subtitle?: string;
+  teachers?: Teacher[];
+}
+
+export default function Teachers(props: TeachersProps) {
+  const { teachers: globalTeachers, setTeachers, isAdminMode } = useAdmin();
+  const teachers = props.teachers && props.teachers.length > 0 ? props.teachers : globalTeachers;
   const [activeTab, setActiveTab] = useState<"card" | "grid">("card");
 
   const [formName, setFormName] = useState("");
@@ -102,10 +109,10 @@ export default function Teachers() {
             Akademisi Berdedikasi
           </span>
           <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Guru & Tenaga Kependidikan
+            {props.title || "Guru & Tenaga Kependidikan"}
           </h2>
           <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
-            Mengenal lebih dekat para pendidik religius dan profesional yang tulus membimbing generasi penerus bangsa di SDN 3 Purwosari Wonogiri.
+            {props.subtitle || "Mengenal lebih dekat para pendidik religius dan profesional yang tulus membimbing generasi penerus bangsa di SDN 3 Purwosari Wonogiri."}
           </p>
           <div className="w-12 h-1 bg-[#2563EB] mx-auto mt-3 rounded-full" />
         </div>

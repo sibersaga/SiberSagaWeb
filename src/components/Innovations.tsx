@@ -46,7 +46,13 @@ interface InnovationSubMenu {
   impactDesc: string;
 }
 
-export default function Innovations() {
+interface InnovationsProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function Innovations(props: InnovationsProps) {
   const [activeTab, setActiveTab] = useState<string>("digital");
 
   const innovations: InnovationSubMenu[] = [
@@ -127,13 +133,13 @@ export default function Innovations() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8">
           <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Inovasi Unggulan & Dampak
+            {props.badge || "Inovasi Unggulan & Dampak"}
           </span>
           <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight animate-fade-in">
-            Portal Inovasi Sekolah
+            {props.title || "Portal Inovasi Sekolah"}
           </h2>
           <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
-            Menghadirkan terobosan kreatif dalam sistem tata belajar, lingkungan hijau berkelanjutan, dan penguatan budaya baca demi memicu percepatan karakter anak didik.
+            {props.subtitle || "Menghadirkan terobosan kreatif dalam sistem tata belajar, lingkungan hijau berkelanjutan, dan penguatan budaya baca demi memicu percepatan karakter anak didik."}
           </p>
           <div className="w-12 h-1 bg-[#2563EB] mx-auto mt-3 rounded-full" />
         </div>

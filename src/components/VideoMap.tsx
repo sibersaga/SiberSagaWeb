@@ -6,20 +6,27 @@
 import React from "react";
 import { MapPin, Clock } from "lucide-react";
 
-export default function VideoMap() {
+interface VideoMapProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  mapUrl?: string;
+}
+
+export default function VideoMap(props: VideoMapProps) {
   return (
     <section id="section-kontak" className="py-12 md:py-16 bg-[#F8FAFC] text-slate-800 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Detil Hubung & Lokasi
+            {props.badge || "Detil Hubung & Lokasi"}
           </span>
           <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Peta Lokasi & Kontak
+            {props.title || "Peta Lokasi & Kontak"}
           </h2>
           <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed">
-            Temukan koordinat peta presisi Google Maps beserta jam pelayanan administrasi wali murid SDN 3 Purwosari Wonogiri secara lengkap.
+            {props.subtitle || "Temukan koordinat peta presisi Google Maps beserta jam pelayanan administrasi wali murid SDN 3 Purwosari Wonogiri secara lengkap."}
           </p>
           <div className="w-12 h-1.5 bg-[#2563EB] mx-auto mt-4 rounded-full" />
         </div>

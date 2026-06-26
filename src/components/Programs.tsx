@@ -207,8 +207,16 @@ const programExtraDetails: { [key: string]: ExtraDetail } = {
   }
 };
 
-export default function Programs() {
-  const { programs } = useAdmin();
+interface ProgramsProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  programs?: Program[];
+}
+
+export default function Programs(props: ProgramsProps) {
+  const { programs: globalPrograms } = useAdmin();
+  const programs = props.programs && props.programs.length > 0 ? props.programs : globalPrograms;
   const [activeTab, setActiveTab] = useState<"all" | "unggulan" | "ekskul" | "intrakurikuler" | "kokurikuler">("all");
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
@@ -236,13 +244,13 @@ export default function Programs() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Kurikulum & Bakat
+            {props.badge || "Kurikulum & Bakat"}
           </span>
           <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Program & Ekstrakurikuler
+            {props.title || "Program & Ekstrakurikuler"}
           </h2>
           <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed">
-            Menfasilitasi tumbuh kembang minat belajar dan menyalurkan kreativitas seni, kepangkatan, serta kebugaran fisik siswa secara seimbang.
+            {props.subtitle || "Menfasilitasi tumbuh kembang minat belajar dan menyalurkan kreativitas seni, kepangkatan, serta kebugaran fisik siswa secara seimbang."}
           </p>
           <div className="w-12 h-1.5 bg-[#2563EB] mx-auto mt-4 rounded-full" />
         </div>

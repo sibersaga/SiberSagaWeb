@@ -6,7 +6,13 @@
 import React from "react";
 import { Users, User, Smile, Sparkles, TrendingUp } from "lucide-react";
 
-export default function SchoolConditions() {
+interface SchoolConditionsProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function SchoolConditions(props: SchoolConditionsProps) {
   const classStats = [
     { grade: "Kelas 1", total: 28, boys: 14, girls: 14, ratio: "50%", color: "from-blue-500 to-indigo-600" },
     { grade: "Kelas 2", total: 26, boys: 12, girls: 14, ratio: "46%", color: "from-purple-500 to-pink-600" },
@@ -27,13 +33,13 @@ export default function SchoolConditions() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-8">
           <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Akuntabilitas Publik
+            {props.badge || "Akuntabilitas Publik"}
           </span>
           <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Kondisi Murid & Rombongan Belajar
+            {props.title || "Kondisi Siswa & Rombel"}
           </h2>
           <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
-            Transparansi data kelembagaan resmi mengenai jumlah persentase siswa aktif berdasarkan pembagian rombongan belajar (rombel) di SDN 3 Purwosari.
+            {props.subtitle || "Rincian data persebaran peserta didik berdasarkan kelas dan jenis kelamin tahun ajaran berjalan di SDN 3 Purwosari."}
           </p>
           <div className="w-12 h-1 bg-[#2563EB] mx-auto mt-3 rounded-full" />
         </div>

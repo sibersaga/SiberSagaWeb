@@ -35,6 +35,8 @@ import EditableText from "./editor/EditableText";
 
 interface HeaderProps {
   activeSection?: string;
+  brandTitle?: string;
+  tagline?: string;
 }
 
 const spanVariants = {
@@ -45,7 +47,8 @@ const spanVariants = {
 
 const transition = { delay: 0.1, type: "spring" as const, bounce: 0, duration: 0.5 };
 
-export default function Header({ activeSection: activeSectionProp }: HeaderProps) {
+export default function Header(props: HeaderProps) {
+  const activeSectionProp = props.activeSection;
   const { siteContent, updateSiteContent } = useAdmin();
   const navigate = useNavigate();
   const location = useLocation();
@@ -218,10 +221,10 @@ export default function Header({ activeSection: activeSectionProp }: HeaderProps
           <SchoolLogo size={46} className="transition-transform group-hover:scale-105 duration-300" />
           <div className="flex flex-col">
             <span className="font-heading font-extrabold text-white text-sm md:text-base leading-none tracking-tight group-hover:text-brand-sky transition-colors">
-              <EditableText value={siteContent.header.brandTitle} onChange={(v) => updateHeader('brandTitle', v)} />
+              <EditableText value={props.brandTitle ?? siteContent.header.brandTitle} onChange={(v) => updateHeader('brandTitle', v)} />
             </span>
             <span className="text-[9px] uppercase tracking-[0.11em] font-bold text-slate-300 mt-1.5">
-              <EditableText value={siteContent.header.tagline} onChange={(v) => updateHeader('tagline', v)} />
+              <EditableText value={props.tagline ?? siteContent.header.tagline} onChange={(v) => updateHeader('tagline', v)} />
             </span>
           </div>
         </div>

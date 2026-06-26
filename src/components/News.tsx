@@ -8,8 +8,16 @@ import { Calendar, User, X, Clock, ArrowRight } from "lucide-react";
 import { NewsItem } from "../types";
 import { useAdmin } from "../context/AdminContext";
 
-export default function News() {
-  const { news } = useAdmin();
+interface NewsProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  news?: NewsItem[];
+}
+
+export default function News(props: NewsProps) {
+  const { news: globalNews } = useAdmin();
+  const news = props.news && props.news.length > 0 ? props.news : globalNews;
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
 
   return (
@@ -18,13 +26,13 @@ export default function News() {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="inline-flex items-center gap-1.5 bg-brand-sky/10 text-brand-sky px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Portal Warta
+            {props.badge || "Portal Warta"}
           </span>
           <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-brand-navy mt-4 tracking-tight">
-            Berita & Informasi Terbaru
+            {props.title || "Berita & Informasi Terbaru"}
           </h2>
           <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed">
-            Ikuti kabar terkini seputar prestasi, agenda kegiatan, pengumuman, serta petualangan seru siswa SDN 3 Purwosari.
+            {props.subtitle || "Ikuti kabar terkini seputar prestasi, agenda kegiatan, pengumuman, serta petualangan seru siswa SDN 3 Purwosari."}
           </p>
           <div className="w-12 h-1.5 bg-brand-sky mx-auto mt-4 rounded-full" />
         </div>

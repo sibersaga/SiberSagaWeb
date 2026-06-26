@@ -10,10 +10,24 @@ import { useAdmin } from "../context/AdminContext";
 import EditableText from "./editor/EditableText";
 
 interface FooterProps {
-  onOpenAdmin: () => void;
+  onOpenAdmin?: () => void;
+  brandTitle?: string;
+  tagline?: string;
+  description?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  quickLinksTitle?: string;
+  quickLinks?: { id: string; label: string }[];
+  socialTitle?: string;
+  socialLinks?: {
+    instagram?: string;
+    youtube?: string;
+  };
+  bottomText?: string;
 }
 
-export default function Footer({ onOpenAdmin }: FooterProps) {
+export default function Footer(props: FooterProps) {
   const { siteContent, updateSiteContent } = useAdmin();
   const footer = siteContent.footer;
 
@@ -55,32 +69,32 @@ export default function Footer({ onOpenAdmin }: FooterProps) {
               <SchoolLogo size={40} />
               <div className="flex flex-col">
                 <span className="font-heading font-extrabold text-sm text-white">
-                  <EditableText value={footer.brandTitle} onChange={(v) => updateFooter('brandTitle', v)} />
+                  <EditableText value={props.brandTitle ?? footer.brandTitle} onChange={(v) => updateFooter('brandTitle', v)} />
                 </span>
                 <span className="text-[10px] uppercase tracking-wider font-semibold text-amber-500">
-                  <EditableText value={footer.tagline} onChange={(v) => updateFooter('tagline', v)} />
+                  <EditableText value={props.tagline ?? footer.tagline} onChange={(v) => updateFooter('tagline', v)} />
                 </span>
               </div>
             </div>
             
             <p className="text-slate-400 text-xs leading-relaxed max-w-sm">
-              <EditableText value={footer.description} onChange={(v) => updateFooter('description', v)} multiline />
+              <EditableText value={props.description ?? footer.description} onChange={(v) => updateFooter('description', v)} multiline />
             </p>
 
             <div className="flex flex-col gap-2 text-xs text-slate-400">
               <div className="flex items-start gap-2">
                 <MapPin size={14} className="text-amber-500 shrink-0 mt-0.5" />
                 <span className="leading-tight">
-                  <EditableText value={footer.address} onChange={(v) => updateFooter('address', v)} multiline />
+                  <EditableText value={props.address ?? footer.address} onChange={(v) => updateFooter('address', v)} multiline />
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone size={14} className="text-amber-500 shrink-0" />
-                <span><EditableText value={footer.phone} onChange={(v) => updateFooter('phone', v)} /></span>
+                <span><EditableText value={props.phone ?? footer.phone} onChange={(v) => updateFooter('phone', v)} /></span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail size={14} className="text-amber-500 shrink-0" />
-                <span><EditableText value={footer.email} onChange={(v) => updateFooter('email', v)} /></span>
+                <span><EditableText value={props.email ?? footer.email} onChange={(v) => updateFooter('email', v)} /></span>
               </div>
             </div>
           </div>
@@ -88,7 +102,7 @@ export default function Footer({ onOpenAdmin }: FooterProps) {
           {/* Middle Column: Quick Links */}
           <div className="md:col-span-3 lg:col-span-3 flex flex-col gap-3">
             <h4 className="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wider">
-              <EditableText value={footer.quickLinksTitle} onChange={(v) => updateFooter('quickLinksTitle', v)} />
+              <EditableText value={props.quickLinksTitle ?? footer.quickLinksTitle} onChange={(v) => updateFooter('quickLinksTitle', v)} />
             </h4>
             <div className="grid grid-cols-2 gap-y-1.5 gap-x-4 text-xs font-medium">
               {footer.links.map(link => (
@@ -102,16 +116,16 @@ export default function Footer({ onOpenAdmin }: FooterProps) {
           {/* Right Column: Medsos & NPSN Info */}
           <div className="md:col-span-3 lg:col-span-4 flex flex-col gap-4">
             <h4 className="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wider">
-              <EditableText value={footer.mediaTitle} onChange={(v) => updateFooter('mediaTitle', v)} />
+              <EditableText value={props.socialTitle ?? footer.mediaTitle} onChange={(v) => updateFooter('mediaTitle', v)} />
             </h4>
             <div className="flex items-center gap-2">
-              <a href={footer.socialUrls.instagram} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-pink-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="Instagram"><Instagram size={14} /></a>
-              <a href={footer.socialUrls.youtube} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="YouTube"><Youtube size={14} /></a>
+              <a href={props.socialLinks?.instagram ?? footer.socialUrls.instagram} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-pink-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="Instagram"><Instagram size={14} /></a>
+              <a href={props.socialLinks?.youtube ?? footer.socialUrls.youtube} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-red-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="YouTube"><Youtube size={14} /></a>
               <a href={footer.socialUrls.tiktok} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-cyan-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="TikTok"><Compass size={14} /></a>
               <a href={footer.socialUrls.facebook} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-300 rounded-lg transition-colors" title="Facebook"><Send size={14} /></a>
             </div>
             <p className="text-[10px] text-slate-500 leading-normal">
-              <EditableText value={footer.npsnInfo} onChange={(v) => updateFooter('npsnInfo', v)} />
+              <EditableText value={props.bottomText ?? footer.npsnInfo} onChange={(v) => updateFooter('npsnInfo', v)} />
             </p>
           </div>
         </div>
@@ -123,7 +137,7 @@ export default function Footer({ onOpenAdmin }: FooterProps) {
           <span><EditableText value={footer.copyright} onChange={(v) => updateFooter('copyright', v)} /></span>
           <div className="flex items-center gap-3">
             <button
-              onClick={onOpenAdmin}
+              onClick={props.onOpenAdmin}
               className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-850 hover:text-white rounded-lg transition-all text-[10px] text-slate-400 font-bold cursor-pointer"
               title="Akses Kontrol Admin"
             >

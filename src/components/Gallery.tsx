@@ -8,8 +8,16 @@ import { Filter, Eye, X, ChevronLeft, ChevronRight, Image } from "lucide-react";
 import { useAdmin } from "../context/AdminContext";
 import { GalleryPhoto } from "../types";
 
-export default function Gallery() {
-  const { gallery } = useAdmin();
+interface GalleryProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  gallery?: GalleryPhoto[];
+}
+
+export default function Gallery(props: GalleryProps) {
+  const { gallery: globalGallery } = useAdmin();
+  const gallery = props.gallery && props.gallery.length > 0 ? props.gallery : globalGallery;
   const [activeFilter, setActiveFilter] = useState<"all" | "fasilitas" | "kegiatan" | "siswa" | "guru">("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -58,15 +66,15 @@ export default function Gallery() {
     <section id="section-galeri" className="py-12 md:py-16 bg-[#F8FAFC] text-slate-800">
       <div className="max-w-7xl mx-auto px-6">
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Dokumentasi Visual
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            {props.badge || "Jejak Visual"}
           </span>
-          <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Galeri Foto Pembelajaran & Fasilitas
+          <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
+            {props.title || "Galeri Kehidupan Sekolah"}
           </h2>
-          <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed">
-            Menyimak sekilas kehidupan bernuansa positif, kenyamanan prasarana belajar mengajar ramah anak, serta sukacita hari-hari beraktivitas di sekolah.
+          <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
+            {props.subtitle || "Rangkuman memori visual kegiatan belajar mengajar, ekstrakurikuler, serta ragam fasilitas pendukung di lingkungan asri SDN 3 Purwosari."}
           </p>
           <div className="w-12 h-1.5 bg-[#2563EB] mx-auto mt-4 rounded-full" />
         </div>

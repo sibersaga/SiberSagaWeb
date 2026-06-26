@@ -103,7 +103,13 @@ export const TestimonialsColumn = (props: {
   );
 };
 
-export default function Testimonials() {
+interface TestimonialsComponentProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function Testimonials(props: TestimonialsComponentProps) {
   const col1 = [testimonials[0], testimonials[3]];
   const col2 = [testimonials[1], testimonials[4]];
   const col3 = [testimonials[2], testimonials[5]];
@@ -113,14 +119,14 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto px-6">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-            Suara Paguyuban
+          <span className="inline-flex items-center gap-1.5 bg-[#2563EB]/10 text-[#2563EB] px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+            {props.badge || "Kepercayaan Publik"}
           </span>
-          <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
-            Testimoni Wali Murid
+          <h2 className="text-2xl md:text-3xl font-heading font-extrabold text-[#1E293B] mt-4 tracking-tight">
+            {props.title || "Apa Kata Mereka?"}
           </h2>
-          <p className="text-[#64748B] font-normal mt-3 text-sm md:text-base leading-relaxed">
-            Dengarkan tanggapan tulus dari para orang tua/wali siswa mengenai dedikasi pengajar, kenyamanan ekologis, serta bimbingan karakter di SDN 3 Purwosari Wonogiri.
+          <p className="text-[#64748B] font-normal mt-2 text-xs md:text-sm leading-relaxed">
+            {props.subtitle || "Cerita tulus dan inspiratif dari para orang tua/wali murid mengenai pengalaman berharga menyekolahkan putra-putri mereka di SDN 3 Purwosari."}
           </p>
           <div className="w-12 h-1.5 bg-[#2563EB] mx-auto mt-4 rounded-full" />
         </div>

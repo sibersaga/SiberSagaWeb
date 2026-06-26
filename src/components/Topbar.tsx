@@ -8,7 +8,16 @@ import { Mail, Phone, Instagram, Youtube } from "lucide-react";
 import { useAdmin } from "../context/AdminContext";
 import EditableText from "./editor/EditableText";
 
-export default function Topbar() {
+interface TopbarProps {
+  contactEmail?: string;
+  announcement?: string;
+  socialUrls?: {
+    instagram?: string;
+    youtube?: string;
+  };
+}
+
+export default function Topbar(props: TopbarProps) {
   const { siteContent, updateSiteContent } = useAdmin();
   const topbar = siteContent.topbar;
 
@@ -25,12 +34,12 @@ export default function Topbar() {
         {/* Contact Info */}
         <div className="flex items-center gap-6">
           <a
-            href={`mailto:${siteContent.topbar.contactEmail}`}
+            href={`mailto:${props.contactEmail ?? siteContent.topbar.contactEmail}`}
             className="flex items-center gap-2 hover:text-amber-400 transition"
           >
             <Mail size={14} className="text-amber-400" />
             <span>
-              <EditableText value={topbar.contactEmail} onChange={(v) => updateTopbar('contactEmail', v)} />
+              <EditableText value={props.contactEmail ?? topbar.contactEmail} onChange={(v) => updateTopbar('contactEmail', v)} />
             </span>
           </a>
         </div>
@@ -38,26 +47,16 @@ export default function Topbar() {
         {/* Social media and local time */}
         <div className="flex items-center gap-4">
           <span className="text-white/50 border-r border-white/20 pr-4">
-            <EditableText value={topbar.location} onChange={(v) => updateTopbar('location', v)} />
+            <EditableText value={props.announcement ?? topbar.location} onChange={(v) => updateTopbar('location', v)} />
           </span>
-          <a
-            href={topbar.instagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-amber-400 transition p-1"
-            title="Instagram"
-          >
-            <Instagram size={14} />
-          </a>
-          <a
-            href={topbar.youtubeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-amber-400 transition p-1"
-            title="YouTube"
-          >
-            <Youtube size={14} />
-          </a>
+          <div className="flex items-center gap-2">
+            <a href={props.socialUrls?.instagram ?? siteContent.footer.socialUrls.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition">
+              <Instagram size={14} />
+            </a>
+            <a href={props.socialUrls?.youtube ?? siteContent.footer.socialUrls.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-amber-400 transition">
+              <Youtube size={14} />
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -122,8 +122,13 @@ function StatCard({ id, count, suffix, label, iconName }: { key?: string; id: st
   );
 }
 
-export default function Stats() {
-  const { stats } = useAdmin();
+interface StatsProps {
+  stats?: any[];
+}
+
+export default function Stats(props: StatsProps) {
+  const { stats: globalStats } = useAdmin();
+  const stats = props.stats && props.stats.length > 0 ? props.stats : globalStats;
   return (
     <section className="py-12 bg-brand-light">
       <div className="max-w-7xl mx-auto px-6 relative z-10">
