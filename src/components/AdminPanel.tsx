@@ -1074,6 +1074,14 @@ export default function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                   <Code size={14} />
                   Editor HTML & JSON
                 </button>
+
+                <a
+                  href="/admin/builder"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer whitespace-nowrap min-w-max transition-all text-slate-400 hover:bg-slate-900 hover:text-white"
+                >
+                  <Layers size={14} className="text-blue-400" />
+                  Visual Page Builder (Puck)
+                </a>
               </nav>
 
               <div className="mt-auto p-3 border-t border-slate-800 hidden md:block">
