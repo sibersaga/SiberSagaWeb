@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef, useState, useCallback, useEffect } from "react";
 import { DropZone } from "@puckeditor/core";
+import { NumberStepperField, UnitSliderField, ColorPickerField, ToggleField } from "../CustomFields";
 
 export const FlexContainerConfig = {
   fields: {
@@ -45,8 +46,14 @@ export const FlexContainerConfig = {
       ],
     },
     // Flex Child Properties (for arrangement relative to parent container)
-    flexGrow: { type: "number" as const },
-    flexShrink: { type: "number" as const },
+    flexGrow: { 
+      type: "custom" as const,
+      render: (props: any) => <NumberStepperField {...props} min={0} max={10} step={1} />
+    },
+    flexShrink: { 
+      type: "custom" as const,
+      render: (props: any) => <NumberStepperField {...props} min={0} max={10} step={1} />
+    },
     flexBasis: { type: "text" as const },
     alignSelf: {
       type: "select" as const,
@@ -71,9 +78,18 @@ export const FlexContainerConfig = {
     gridTemplateColumns: {
       type: "text" as const, // e.g., "1fr 1fr", "repeat(3, 1fr)"
     },
-    gap: { type: "text" as const },
-    padding: { type: "text" as const },
-    margin: { type: "text" as const },
+    gap: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
+    padding: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={120} unit="px" />
+    },
+    margin: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={120} unit="px" />
+    },
     position: {
       type: "select" as const,
       options: [
@@ -89,8 +105,14 @@ export const FlexContainerConfig = {
     bottom: { type: "text" as const },
     left: { type: "text" as const },
     zIndex: { type: "number" as const },
-    backgroundColor: { type: "text" as const },
-    borderRadius: { type: "text" as const },
+    backgroundColor: { 
+      type: "custom" as const,
+      render: (props: any) => <ColorPickerField {...props} />
+    },
+    borderRadius: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
     minHeight: { type: "text" as const },
     width: { type: "text" as const },
     maxWidth: { type: "text" as const },
@@ -180,17 +202,21 @@ export const FlexContainerConfig = {
 export const GridColumnsConfig = {
   fields: {
     columns: {
-      type: "radio" as const,
-      options: [
-        { label: "1 Column", value: 1 },
-        { label: "2 Columns", value: 2 },
-        { label: "3 Columns", value: 3 },
-        { label: "4 Columns", value: 4 },
-      ],
+      type: "custom" as const,
+      render: (props: any) => <NumberStepperField {...props} min={1} max={12} step={1} />
     },
-    gap: { type: "text" as const },
-    padding: { type: "text" as const },
-    margin: { type: "text" as const },
+    gap: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
+    padding: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={120} unit="px" />
+    },
+    margin: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={120} unit="px" />
+    },
     alignItems: {
       type: "select" as const,
       options: [
@@ -200,7 +226,10 @@ export const GridColumnsConfig = {
         { label: "End", value: "end" },
       ],
     },
-    backgroundColor: { type: "text" as const },
+    backgroundColor: { 
+      type: "custom" as const,
+      render: (props: any) => <ColorPickerField {...props} />
+    },
   },
   defaultProps: {
     columns: 2,
@@ -251,8 +280,14 @@ export const BasicTextConfig = {
       ],
     },
     text: { type: "textarea" as const },
-    color: { type: "text" as const },
-    fontSize: { type: "text" as const },
+    color: { 
+      type: "custom" as const,
+      render: (props: any) => <ColorPickerField {...props} />
+    },
+    fontSize: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={8} max={72} unit="px" />
+    },
     fontWeight: {
       type: "select" as const,
       options: [
@@ -272,15 +307,22 @@ export const BasicTextConfig = {
         { label: "Justify", value: "justify" },
       ],
     },
-    margin: { type: "text" as const },
+    margin: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
   },
   defaultProps: {
     tag: "p",
     text: "Teks baru...",
     textAlign: "left",
   },
-  render: ({ tag, text, color, fontSize, fontWeight, textAlign, margin }: any) => {
+  render: ({ tag, text, color, fontSize, fontWeight, textAlign, margin, id, puck }: any) => {
     const Tag = tag as keyof JSX.IntrinsicElements;
+    const ref = useRef<HTMLElement>(null);
+    const [editing, setEditing] = useState(false);
+    const isEditorEnv = typeof window !== "undefined" && (window as any).__PUCK_EDITOR__ === true;
+
     const style: React.CSSProperties = {
       color: color || undefined,
       fontSize: fontSize || undefined,
@@ -288,10 +330,68 @@ export const BasicTextConfig = {
       textAlign: textAlign as any,
       margin: margin || undefined,
       whiteSpace: "pre-wrap",
+      outline: editing ? "2px solid #3b82f6" : "none",
+      borderRadius: 4,
+      cursor: isEditorEnv ? (editing ? "text" : "default") : undefined,
+      minHeight: "1em",
+      transition: "outline 0.15s",
     };
-    return <Tag style={style}>{text}</Tag>;
+
+    const handleDoubleClick = useCallback(() => {
+      if (!isEditorEnv) return;
+      setEditing(true);
+      setTimeout(() => {
+        if (ref.current) {
+          ref.current.focus();
+          // Place cursor at end
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(ref.current);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }, 10);
+    }, [isEditorEnv]);
+
+    const handleBlur = useCallback(() => {
+      setEditing(false);
+      // Dispatch custom event so PageBuilder can pick up the new text
+      if (ref.current && id) {
+        const newText = ref.current.innerText;
+        window.dispatchEvent(new CustomEvent("puck:inlineTextEdit", {
+          detail: { id, text: newText },
+        }));
+      }
+    }, [id]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+      // Escape or Shift+Enter to finish editing
+      if (e.key === "Escape") {
+        e.preventDefault();
+        (e.target as HTMLElement).blur();
+      }
+    }, []);
+
+    return (
+      <Tag
+        ref={ref as any}
+        style={style}
+        contentEditable={editing}
+        suppressContentEditableWarning
+        onDoubleClick={handleDoubleClick}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        data-puck-inline-edit="true"
+        data-component-id={id}
+        title={isEditorEnv ? "Double-click to edit text" : undefined}
+      >
+        {text}
+      </Tag>
+    );
   },
 };
+
 
 export const BasicImageConfig = {
   fields: {
@@ -307,8 +407,14 @@ export const BasicImageConfig = {
         { label: "Fill", value: "fill" },
       ],
     },
-    borderRadius: { type: "text" as const },
-    margin: { type: "text" as const },
+    borderRadius: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
+    margin: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
   },
   defaultProps: {
     url: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=800",
@@ -349,7 +455,10 @@ export const BasicButtonConfig = {
         { label: "Large", value: "lg" },
       ],
     },
-    margin: { type: "text" as const },
+    margin: { 
+      type: "custom" as const,
+      render: (props: any) => <UnitSliderField {...props} min={0} max={100} unit="px" />
+    },
     width: { type: "text" as const },
   },
   defaultProps: {

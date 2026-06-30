@@ -114,3 +114,23 @@ export const SpacerBlockConfig = {
     return <div style={{ height: height, width: "100%" }} />;
   },
 };
+
+export const RawHTMLBlockConfig = {
+  fields: {
+    htmlContent: {
+      type: "textarea" as const,
+      label: "Raw HTML Code"
+    }
+  },
+  defaultProps: {
+    htmlContent: "<div style=\"padding: 20px; background: #f0fdf4; border: 1px dashed #22c55e;\">Tulis kode HTML Anda di sini</div>"
+  },
+  render: ({ htmlContent }: any) => {
+    return (
+      <div 
+        dangerouslySetInnerHTML={{ __html: htmlContent }} 
+        className="w-full relative"
+      />
+    );
+  }
+};

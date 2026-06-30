@@ -405,6 +405,12 @@ export default function Header(props: HeaderProps) {
             >
               <Share2 size={17} strokeWidth={2.4} />
             </button>
+            <button 
+              onClick={() => handleScrollTo("spmb")}
+              className="ml-2 px-4 py-1.5 bg-brand-sky hover:bg-brand-sky/90 text-white font-extrabold text-xs rounded-xl shadow-sm transition-all transform active:scale-95 cursor-pointer"
+            >
+              Menu Utama
+            </button>
           </div>
         </nav>
 
@@ -426,6 +432,12 @@ export default function Header(props: HeaderProps) {
             aria-label="Bagikan Halaman"
           >
             <Share2 size={19} strokeWidth={2.4} />
+          </button>
+          <button 
+            onClick={() => handleScrollTo("spmb")}
+            className="hidden sm:block ml-1 px-3 py-1.5 bg-brand-sky text-white font-extrabold text-xs rounded-xl shadow-sm cursor-pointer"
+          >
+            Menu
           </button>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

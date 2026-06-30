@@ -77,3 +77,60 @@
 .animate-slide-left { animation: slideLeft 0.6s ease-out forwards; }
 .animate-slide-right { animation: slideRight 0.6s ease-out forwards; }
 .animate-rotate-in { animation: rotateIn 0.6s ease-out forwards; }
+
+ /* Puck Builder UI Compact Overrides */
+:root {
+  --puck-sidebar-width: 260px;
+}
+.Puck-sidebar {
+  width: 260px !important;
+  min-width: 260px !important;
+  max-width: 260px !important;
+}
+.Puck-sidebar * {
+  font-size: 0.85rem;
+}
+.Puck-sidebar input, .Puck-sidebar select, .Puck-sidebar textarea {
+  padding: 6px 8px !important;
+  font-size: 0.8rem !important;
+}
+.Puck-sidebar label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+.Puck-sidebar .Puck-field {
+  padding-bottom: 12px !important;
+  margin-bottom: 8px !important;
+  border-bottom: 1px solid #f1f5f9;
+}
+.Puck-header {
+  padding: 12px 24px !important;
+  gap: 16px !important;
+}
+.Puck-leftSideBar {
+  padding: 16px !important;
+  gap: 12px !important;
+}
+.Puck-rightSideBar {
+  padding: 16px !important;
+  gap: 12px !important;
+}
+.Puck-sidebar > div > div {
+  margin-bottom: 8px !important;
+}
+
+/* -------------------------------------
+   Elementor-style Right Sidebar (Tabs)
+   ------------------------------------- */
+/* The top level fields in Right sidebar are now 'content', 'style', 'advance' objects. */
+/* We can style their fieldsets to look like tabs or neat accordions. */
+.Puck-rightSideBar fieldset > legend {
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+  width: 100% !important;
+  margin-bottom: 12px !important;
+}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { isSupabaseConfigured, getSupabase } from "../../supabase";
 import { Calendar, User, Database, Globe, Type } from "lucide-react";
-
+import { NumberStepperField, UnitSliderField, ColorPickerField, ToggleField } from "../CustomFields";
 // ─── Helper: Editor Detection ─────────────────────────────────────────────────
 const isEditorMode = () =>
   typeof window !== "undefined" && window.location.pathname.includes("/admin");
@@ -69,9 +69,25 @@ export const DynamicTextBlockConfig = {
         { label: "Span", value: "span" },
       ],
     },
-    fontSize: { type: "text" as const, label: "Ukuran Font (e.g. 1.2rem)" },
-    fontWeight: { type: "text" as const, label: "Tebal Font (e.g. 600)" },
-    color: { type: "text" as const, label: "Warna Teks" },
+    fontSize: { 
+      type: "custom" as const,
+      label: "Ukuran Font (px)",
+      render: (props: any) => <UnitSliderField {...props} min={8} max={72} unit="px" />
+    },
+    fontWeight: { 
+      type: "select" as const,
+      label: "Tebal Font",
+      options: [
+        { label: "Normal (400)", value: "400" },
+        { label: "Medium (500)", value: "500" },
+        { label: "Bold (700)", value: "700" },
+      ]
+    },
+    color: { 
+      type: "custom" as const,
+      label: "Warna Teks",
+      render: (props: any) => <ColorPickerField {...props} />
+    },
   },
   defaultProps: {
     source: "date",

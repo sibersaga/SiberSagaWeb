@@ -19,7 +19,7 @@ import VideoMap from "../components/VideoMap";
 import Welcome from "../components/Welcome";
 import SchoolConditions from "../components/SchoolConditions";
 import { FlexContainerConfig, GridColumnsConfig, BasicTextConfig, BasicImageConfig, BasicButtonConfig } from "./blocks/LayoutBlocks";
-import { IconBlockConfig, DividerBlockConfig, SpacerBlockConfig } from "./blocks/ContentBlocks";
+import { IconBlockConfig, DividerBlockConfig, SpacerBlockConfig, RawHTMLBlockConfig } from "./blocks/ContentBlocks";
 import { GalleryBlockConfig, VideoBlockConfig, AudioBlockConfig, LottieBlockConfig, PdfViewerBlockConfig } from "./blocks/MediaBlocks";
 import { CounterBlockConfig, ProgressBarBlockConfig, StarRatingBlockConfig, TestimonialBlockConfig, ReviewBlockConfig } from "./blocks/DataBlocks";
 import { SocialIconsBlockConfig, ShareButtonBlockConfig, FollowButtonBlockConfig } from "./blocks/SocialBlocks";
@@ -69,6 +69,7 @@ type Props = {
   Icon: any;
   Divider: any;
   Spacer: any;
+  RawHTML: any;
   GalleryWidget: any;
   Video: any;
   Audio: any;
@@ -114,50 +115,33 @@ type Props = {
 
 const rawConfig: Config<Props> = {
   categories: {
-    layout: {
-      components: ["FlexContainer", "GridColumns"],
-      title: "1. Layout & Grid",
+    basic: {
+      title: "Basic",
+      components: [
+        "FlexContainer", "BasicText", "BasicImage", "BasicButton", "Video", 
+        "StarRating", "Divider", "VideoMap", "Icon", "GalleryWidget", 
+        "Counter", "Spacer", "Testimonial", "Tabs", "Accordion", 
+        "SocialIcons", "ProgressBar", "Audio", "RawHTML", "AlertBox"
+      ],
     },
-    content: {
-      components: ["BasicText", "BasicImage", "BasicButton", "Icon", "Divider", "Spacer"],
-      title: "2. Content Elements",
-    },
-    media: {
-      components: ["GalleryWidget", "Video", "Audio", "Lottie", "PdfViewer"],
-      title: "3. Media Widgets",
-    },
-    data: {
-      components: ["Counter", "ProgressBar", "StarRating", "Testimonial", "Review"],
-      title: "4. Data & Reviews",
-    },
-    social: {
-      components: ["SocialIcons", "ShareButton", "FollowButton"],
-      title: "5. Social Widgets",
-    },
-    business: {
-      components: ["PricingTable", "PricingList", "CallToAction", "Accordion", "Tabs", "CountdownTimer", "AlertBox"],
-      title: "6. Business Widgets",
-    },
-    forms: {
-      components: ["FormWrapper", "InputText", "Textarea", "Checkbox", "Radio", "Select", "DatePicker", "FileUpload"],
-      title: "7. Form Builder",
+    advanced: {
+      title: "Pro & Advanced",
+      components: [
+        "GridColumns", "Lottie", "PdfViewer", "Review", "ShareButton", "FollowButton",
+        "PricingTable", "PricingList", "CallToAction", "CountdownTimer",
+        "FormWrapper", "InputText", "Textarea", "Checkbox", "Radio", "Select", "DatePicker", "FileUpload",
+        "PopupModal", "PopupSlideIn",
+        "DynamicText", "DynamicImage", "UserData", "DatabaseData", "ApiData"
+      ],
     },
     template: {
-      components: ["Topbar", "Header", "Hero", "Stats", "Welcome", "Teachers", "SchoolConditions", "Programs", "Achievements", "Innovations", "News", "VideoMap", "SpmbFaq", "AnnouncementsTicker", "Footer"],
-      title: "SiberSaga Template Blocks",
-    },
-    templateSystem: {
-      components: ["GlobalTemplate"],
-      title: "8. Template System",
-    },
-    popup: {
-      components: ["PopupModal", "PopupSlideIn"],
-      title: "9. Popup Builder",
-    },
-    dynamic: {
-      components: ["DynamicText", "DynamicImage", "UserData", "DatabaseData", "ApiData"],
-      title: "10. Dynamic Content",
-    },
+      title: "Template Blocks",
+      components: [
+        "Topbar", "Header", "Hero", "Stats", "Welcome", "Teachers", "SchoolConditions", 
+        "Programs", "Achievements", "Innovations", "News", "SpmbFaq", "AnnouncementsTicker", "Footer",
+        "GlobalTemplate"
+      ],
+    }
   },
   components: {
     FlexContainer: FlexContainerConfig as any,
@@ -170,6 +154,7 @@ const rawConfig: Config<Props> = {
     Icon: IconBlockConfig as any,
     Divider: DividerBlockConfig as any,
     Spacer: SpacerBlockConfig as any,
+    RawHTML: RawHTMLBlockConfig as any,
     
     // Media Blocks
     GalleryWidget: GalleryBlockConfig as any,
@@ -541,17 +526,56 @@ for (const [key, compConfig] of Object.entries(enhancedComponents)) {
   const component = compConfig as any;
   if (!component) continue;
 
+  const originalFields = component.fields || {};
+  const allFields = { ...originalFields, ...advancedFields };
+
+  // Group fields into Elementor-style Tabs
+  const styleKeys = [
+    "color", "backgroundColor", "padding", "margin", "align", "justify", 
+    "gap", "borderRadius", "width", "height", "size", "layoutType", 
+    "flex", "grid", "zIndex", "top", "right", "bottom", "left"
+  ];
+  const advanceKeys = ["id", "className", "customCss"];
+
+  const contentFields: any = {};
+  const styleFields: any = {};
+  const advanceFields: any = {};
+
+  for (const [fKey, fVal] of Object.entries(allFields)) {
+    if (advanceKeys.includes(fKey)) advanceFields[fKey] = fVal;
+    else if (styleKeys.some(sk => fKey.toLowerCase().includes(sk.toLowerCase()))) styleFields[fKey] = fVal;
+    else contentFields[fKey] = fVal;
+  }
+
   component.fields = {
-    ...(component.fields || {}),
-    ...advancedFields,
+    content: {
+      type: "object",
+      objectFields: contentFields
+    },
+    style: {
+      type: "object",
+      objectFields: styleFields
+    },
+    advance: {
+      type: "object",
+      objectFields: advanceFields
+    }
   };
 
   const OriginalRender = component.render;
   if (OriginalRender) {
     component.render = function EnhancedRender(props: any) {
+      // Flatten the props back for the original render function
+      const flatProps = {
+        ...(props.content || {}),
+        ...(props.style || {}),
+        ...(props.advance || {}),
+        ...props
+      };
+
       return (
-        <AdvancedWrapper props={props}>
-          <OriginalRender {...props} />
+        <AdvancedWrapper props={flatProps}>
+          <OriginalRender {...flatProps} />
         </AdvancedWrapper>
       );
     };
