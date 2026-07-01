@@ -32,6 +32,31 @@ export const isSupabaseConfigured = Boolean(
 
 export function getSupabase() {
   if (!client) {
+    if (!isSupabaseConfigured) {
+      console.warn("Supabase env vars missing. CMS will use localStorage fallback.");
+      const mockResult = { data: null, error: new Error("Supabase is not configured.") };
+      const mockChain = {
+        select: () => mockChain,
+        order: () => mockChain,
+        eq: () => mockChain,
+        neq: () => mockChain,
+        maybeSingle: () => mockChain,
+        insert: () => mockChain,
+        upsert: () => mockChain,
+        update: () => mockChain,
+        delete: () => mockChain,
+        then: (resolve: any) => resolve(mockResult),
+      };
+      client = {
+        from: () => mockChain,
+        auth: {
+          signInWithOtp: async () => mockResult,
+          verifyOtp: async () => mockResult,
+          signOut: async () => mockResult,
+        }
+      } as unknown as SupabaseClient;
+      return client;
+    }
     client = createClient(
       import.meta.env.VITE_SUPABASE_URL,
       import.meta.env.VITE_SUPABASE_ANON_KEY
